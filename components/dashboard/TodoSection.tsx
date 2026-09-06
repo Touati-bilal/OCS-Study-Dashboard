@@ -55,7 +55,7 @@ export function TodoSection({
   }
 
   return (
-    <div className={compact ? "" : "px-5 pb-6"}>
+    <div className={compact ? "" : "px-5 pb-6 md:px-8 lg:px-0"}>
       <div className="mb-3 flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold text-white/85">
           <ListTodo size={16} className="text-brand-400" /> {title}

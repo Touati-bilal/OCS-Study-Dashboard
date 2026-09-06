@@ -17,7 +17,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="glass relative z-30 flex shrink-0 items-stretch justify-around border-t border-white/10 px-1 pb-[env(safe-area-inset-bottom)]">
+    <nav className="glass relative z-30 flex shrink-0 items-stretch justify-around border-t border-white/10 px-1 pb-[env(safe-area-inset-bottom)] md:hidden">
       {NAV_ITEMS.map((item) => {
         const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
         const Icon = item.icon;

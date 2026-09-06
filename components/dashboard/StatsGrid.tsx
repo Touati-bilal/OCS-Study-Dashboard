@@ -33,7 +33,7 @@ export function StatsGrid() {
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-3 px-5 pb-4">
+    <div className="grid grid-cols-3 gap-3 px-5 pb-4 md:px-8 lg:px-0">
       {items.map((item, i) => (
         <Card key={item.label} delay={0.1 + i * 0.05} className="flex flex-col items-center gap-1.5 p-3">
           <div

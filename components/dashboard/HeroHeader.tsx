@@ -19,7 +19,7 @@ export function HeroHeader() {
   });
 
   return (
-    <div className="relative overflow-hidden px-5 pb-6 pt-6">
+    <div className="relative overflow-hidden px-5 pb-6 pt-6 md:px-8 md:pt-8 lg:px-10">
       <motion.div
         className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full bg-brand-500/20 blur-3xl"
         animate={{ scale: [1, 1.15, 1] }}

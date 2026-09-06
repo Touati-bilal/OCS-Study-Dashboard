@@ -13,7 +13,7 @@ export function ModuleProgressList() {
   const started = stats.filter((s) => s.started);
 
   return (
-    <div className="px-5 pb-4">
+    <div className="px-5 pb-4 md:px-8 lg:px-0">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-display text-sm font-semibold text-white/85">Modules en cours</h2>
         <Link href="/modules" className="text-xs font-medium text-brand-400">
@@ -30,7 +30,7 @@ export function ModuleProgressList() {
           </Link>
         </Card>
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
           {started.map((s, i) => (
             <Link key={s.module.id} href={`/modules/${s.module.id}`}>
               <Card delay={0.05 * i} className="p-4">

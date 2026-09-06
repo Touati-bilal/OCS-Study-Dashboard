@@ -11,7 +11,7 @@ export function CategorySummary({ modules, color }: { modules: ModuleDef[]; colo
   const stats = useAggregateStats(modules);
 
   return (
-    <Card delay={0} className="mx-5 mb-4 p-4">
+    <Card delay={0} className="mx-5 mb-4 p-4 md:mx-8 lg:mx-10">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs text-white/45">Progression moyenne</p>

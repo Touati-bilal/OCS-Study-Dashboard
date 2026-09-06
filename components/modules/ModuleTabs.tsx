@@ -20,7 +20,7 @@ export function ModuleTabs({
   color: string;
 }) {
   return (
-    <div className="no-scrollbar sticky top-[65px] z-10 flex gap-1 overflow-x-auto border-b border-white/5 bg-base-950/90 px-5 py-2 backdrop-blur-md">
+    <div className="no-scrollbar sticky top-[65px] z-10 flex gap-1 overflow-x-auto border-b border-white/5 bg-base-950/90 px-5 py-2 backdrop-blur-md md:px-8 lg:px-10">
       {tabs.map((tab) => {
         const isActive = tab.id === active;
         return (

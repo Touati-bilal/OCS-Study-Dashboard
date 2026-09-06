@@ -10,7 +10,7 @@ export function OverallProgressCard() {
   const stats = useAggregateStats();
 
   return (
-    <Card delay={0.05} className="mx-5 mb-4 p-5">
+    <Card delay={0.05} className="mx-5 mb-4 p-5 md:mx-8 lg:mx-0 lg:p-6">
       <div className="flex items-center gap-5">
         <ProgressRing value={stats.overallProgress} size={92} strokeWidth={9} color="#48a3ff" />
         <div className="flex-1">

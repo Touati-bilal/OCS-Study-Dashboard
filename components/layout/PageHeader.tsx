@@ -19,7 +19,7 @@ export function PageHeader({
     <motion.header
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-white/5 bg-base-950/80 px-5 py-4 backdrop-blur-md"
+      className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-white/5 bg-base-950/80 px-5 py-4 backdrop-blur-md md:px-8 lg:px-10"
     >
       <div className="flex items-center gap-2 min-w-0">
         {backHref && (

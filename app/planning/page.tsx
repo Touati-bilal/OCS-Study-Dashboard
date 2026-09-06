@@ -27,7 +27,7 @@ export default function PlanningHubPage() {
       <ModuleTabs tabs={TABS} active={tab} onChange={setTab} color="#48a3ff" />
 
       <HydrationGate>
-        <div className="flex flex-col gap-4 px-5 py-4">
+        <div className="flex flex-col gap-4 px-5 py-4 md:px-8 lg:px-10">
           {tab === "stage" && (
             <>
               <InternshipCard />

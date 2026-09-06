@@ -48,10 +48,10 @@ export function ModuleDetailClient({
       <ModuleTabs tabs={tabs} active={tab} onChange={setTab} color={module.color} />
 
       <HydrationGate>
-        <div className="px-5 py-4">
+        <div className="px-5 py-4 md:px-8 lg:px-10">
           {tab === "apercu" && (
-            <div className="flex flex-col gap-3">
-              <Card className="p-4">
+            <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4">
+              <Card className="p-4 lg:col-span-2">
                 <div className="flex items-center gap-4">
                   <ProgressRing value={stat?.progress ?? 0} color={module.color} size={80} />
                   <div className="flex-1">
