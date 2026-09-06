@@ -1,0 +1,573 @@
+export interface LearningObjective {
+  id: string;
+  text: string;
+}
+
+export interface ChapterDef {
+  id: string;
+  title: string;
+  objectives: LearningObjective[];
+}
+
+export interface ModuleDef {
+  id: string;
+  code: string;
+  name: string;
+  category: "main" | "secondary";
+  folder: string;
+  duration: number;
+  coefficient: number;
+  efmRegional: boolean;
+  description: string;
+  objectives: string[];
+  chapters: ChapterDef[];
+  skills?: string[];
+  color: string;
+}
+
+/** Builds chapters where every chapter carries several granular, checkable learning objectives. */
+function detailedChapters(defs: Array<{ title: string; objectives: string[] }>): ChapterDef[] {
+  return defs.map((def, i) => ({
+    id: `ch-${i + 1}`,
+    title: def.title,
+    objectives: def.objectives.map((text, j) => ({ id: `ch-${i + 1}-o-${j + 1}`, text })),
+  }));
+}
+
+/** Builds simple chapters (one implicit objective matching the title) — used for secondary modules. */
+function simpleChapters(titles: string[]): ChapterDef[] {
+  return titles.map((title, i) => ({
+    id: `ch-${i + 1}`,
+    title,
+    objectives: [{ id: `ch-${i + 1}-o-1`, text: title }],
+  }));
+}
+
+export const MAIN_MODULES: ModuleDef[] = [
+  {
+    id: "M201",
+    code: "M201",
+    name: "S'initier aux fondamentaux de la cybersécurité",
+    category: "main",
+    folder: "M201",
+    duration: 75,
+    coefficient: 2,
+    efmRegional: false,
+    description:
+      "Ce module permet d'acquérir des bases solides en cybersécurité : concepts fondamentaux, terminologie, principes de sécurité, normes et réglementations, ainsi qu'une découverte des différents métiers du domaine.",
+    objectives: [
+      "Comprendre la terminologie de la cybersécurité.",
+      "Connaître les fondamentaux de la sécurité de l'information.",
+      "Comprendre les menaces et attaques courantes.",
+      "Connaître les normes internationales de cybersécurité.",
+      "Comprendre les réglementations en cybersécurité.",
+      "Découvrir les domaines et métiers de la cybersécurité.",
+    ],
+    chapters: detailedChapters([
+      {
+        title: "Cybersecurity Terminology",
+        objectives: [
+          "Définir les notions de vulnérabilité, menace et risque",
+          "Distinguer confidentialité, intégrité et disponibilité (triade CIA)",
+          "Connaître le vocabulaire des acteurs (hacker, pentester, RSSI, SOC...)",
+        ],
+      },
+      {
+        title: "Standards and Regulations",
+        objectives: [
+          "Connaître la norme ISO/IEC 27001",
+          "Identifier les normes PCI-DSS et NIST",
+          "Comprendre les réglementations RGPD et loi 09-08",
+        ],
+      },
+      {
+        title: "Security Principles",
+        objectives: [
+          "Appliquer le principe de défense en profondeur",
+          "Comprendre le principe du moindre privilège",
+          "Identifier les principales menaces et attaques courantes",
+        ],
+      },
+      {
+        title: "Cybersecurity Careers",
+        objectives: [
+          "Découvrir les métiers techniques (pentester, analyste SOC, forensic)",
+          "Découvrir les métiers de gouvernance (RSSI, auditeur, DPO)",
+          "Identifier les certifications du domaine (CEH, OSCP, CISSP)",
+        ],
+      },
+    ]),
+    color: "#48a3ff",
+  },
+  {
+    id: "M202",
+    code: "M202",
+    name: "Appliquer les méthodologies des tests d'intrusions",
+    category: "main",
+    folder: "M202",
+    duration: 105,
+    coefficient: 3,
+    efmRegional: true,
+    description:
+      "Ce module est consacré à l'apprentissage et à l'application des méthodologies professionnelles de tests d'intrusion : planification, reconnaissance, identification des vulnérabilités, exploitation en environnement contrôlé et rédaction d'un rapport professionnel.",
+    objectives: [
+      "Comprendre les méthodologies professionnelles de tests d'intrusion.",
+      "Planifier et réaliser une mission de test d'intrusion.",
+      "Identifier les vulnérabilités d'un système d'information.",
+      "Exploiter les vulnérabilités dans un environnement contrôlé.",
+      "Analyser les résultats d'un test d'intrusion.",
+      "Rédiger un rapport professionnel de test d'intrusion.",
+    ],
+    chapters: detailedChapters([
+      {
+        title: "Découvrir les méthodologies de test d'intrusion",
+        objectives: [
+          "Distinguer la méthodologie OSSTMM",
+          "Identifier la méthodologie PTES",
+          "Distinguer la méthodologie OWASP WSTG",
+        ],
+      },
+      {
+        title: "Identifier les vulnérabilités au sein d'un système d'information",
+        objectives: [
+          "Utiliser Kali Linux pour la reconnaissance",
+          "Scanner les vulnérabilités avec Nessus",
+          "Réaliser une évaluation des vulnérabilités (Vulnerability Assessment)",
+        ],
+      },
+      {
+        title: "Exploiter les vulnérabilités au sein d'un système d'information",
+        objectives: [
+          "Exploiter des vulnérabilités en environnement contrôlé",
+          "Automatiser des tâches d'exploitation avec Python",
+          "Élever ses privilèges après compromission",
+        ],
+      },
+      {
+        title: "Rédiger un rapport de synthèse de test d'intrusion",
+        objectives: [
+          "Structurer un rapport professionnel de pentest",
+          "Prioriser les vulnérabilités selon leur criticité",
+          "Formuler des recommandations de remédiation",
+        ],
+      },
+    ]),
+    skills: [
+      "OSSTMM",
+      "PTES",
+      "OWASP WSTG",
+      "Kali Linux",
+      "Nessus",
+      "Python",
+      "Vulnerability Assessment",
+      "Exploitation",
+      "Report Writing",
+    ],
+    color: "#fb7185",
+  },
+  {
+    id: "M203",
+    code: "M203",
+    name: "Analyser les attaques et les incidents de cybersécurité",
+    category: "main",
+    folder: "M203",
+    duration: 105,
+    coefficient: 3,
+    efmRegional: true,
+    description:
+      "Ce module permet d'apprendre à analyser les attaques informatiques, comprendre les incidents de sécurité, appliquer les procédures de gestion des incidents, effectuer le Threat Hunting et répondre efficacement aux incidents de cybersécurité.",
+    objectives: [
+      "Comprendre les incidents de sécurité.",
+      "Analyser le Cyber Kill Chain.",
+      "Appliquer les procédures de gestion des incidents.",
+      "Utiliser le framework NIST 800-61 R2.",
+      "Effectuer le Threat Hunting.",
+      "Répondre efficacement aux incidents.",
+      "Automatiser certaines réponses aux incidents.",
+      "Documenter les incidents de manière professionnelle.",
+    ],
+    chapters: detailedChapters([
+      {
+        title: "S'approprier la notion d'un incident de sécurité",
+        objectives: [
+          "Définir ce qu'est un incident de sécurité",
+          "Analyser le Cyber Kill Chain",
+          "Classifier les types d'incidents",
+        ],
+      },
+      {
+        title: "Appliquer les procédures de gestion des incidents",
+        objectives: [
+          "Appliquer le framework NIST 800-61 R2",
+          "Suivre les étapes de détection, confinement et éradication",
+          "Documenter un incident de manière professionnelle",
+        ],
+      },
+      {
+        title: "Effectuer le Threat Hunting",
+        objectives: [
+          "Formuler des hypothèses de chasse aux menaces",
+          "Utiliser des indicateurs de compromission (IOC)",
+          "Analyser les logs et sources de données pour détecter une menace",
+        ],
+      },
+      {
+        title: "Répondre à des incidents de cybersécurité",
+        objectives: [
+          "Répondre efficacement à un incident en cours",
+          "Automatiser certaines réponses aux incidents (SOAR)",
+          "Réaliser un retour d'expérience post-incident",
+        ],
+      },
+    ]),
+    skills: ["Gestion des incidents", "Cyber Kill Chain", "NIST 800-61 R2", "Threat Hunting", "Incident Response"],
+    color: "#fbbf24",
+  },
+  {
+    id: "M204",
+    code: "M204",
+    name: "Assurer le durcissement de la sécurité des systèmes et réseaux",
+    category: "main",
+    folder: "M204",
+    duration: 90,
+    coefficient: 3,
+    efmRegional: true,
+    description:
+      "Ce module permet d'apprendre les principes du durcissement (Hardening) des systèmes et des réseaux informatiques afin de réduire leur surface d'attaque et renforcer leur niveau de sécurité.",
+    objectives: [
+      "Comprendre les principes du durcissement.",
+      "Utiliser les normes et référentiels de sécurité.",
+      "Appliquer les bonnes pratiques d'administration sécurisée.",
+      "Durcir les équipements réseau.",
+      "Sécuriser Windows et Linux.",
+      "Déployer des solutions DLP.",
+      "Mettre en place la traçabilité des événements.",
+    ],
+    chapters: detailedChapters([
+      {
+        title: "Présenter les normes et les standards de durcissement",
+        objectives: [
+          "Connaître les normes ANSSI",
+          "Appliquer les référentiels CIS Benchmark",
+          "Comprendre les bonnes pratiques d'administration sécurisée",
+        ],
+      },
+      {
+        title: "Maîtriser le durcissement du réseau",
+        objectives: ["Configurer un firewall", "Mettre en place un VPN", "Sécuriser les échanges avec TLS"],
+      },
+      {
+        title: "Maîtriser le durcissement du système",
+        objectives: [
+          "Durcir un système Windows",
+          "Durcir un système Linux",
+          "Durcir un environnement Active Directory",
+        ],
+      },
+      {
+        title: "Déployer des solutions DLP et de traçabilité",
+        objectives: [
+          "Déployer une solution DLP (Data Loss Prevention)",
+          "Mettre en place la traçabilité des événements",
+          "Centraliser et surveiller les journaux d'activité",
+        ],
+      },
+    ]),
+    skills: ["Hardening", "CIS Benchmark", "Firewall", "VPN", "TLS", "Windows Hardening", "Linux Hardening", "DLP"],
+    color: "#34d399",
+  },
+  {
+    id: "M205",
+    code: "M205",
+    name: "Appréhender les méthodes d'investigation numérique",
+    category: "main",
+    folder: "M205",
+    duration: 90,
+    coefficient: 2,
+    efmRegional: false,
+    description:
+      "Ce module permet d'apprendre les méthodes d'investigation numérique (Digital Forensics), la collecte, l'acquisition, l'analyse et la présentation des preuves numériques lors d'enquêtes de cybersécurité.",
+    objectives: [
+      "Comprendre l'investigation numérique",
+      "Maîtriser les concepts techniques",
+      "Comprendre les disques et systèmes de fichiers",
+      "Acquérir des preuves numériques",
+      "Analyser les preuves numériques",
+    ],
+    chapters: detailedChapters([
+      {
+        title: "Introduction à l'investigation numérique",
+        objectives: [
+          "Comprendre les principes du Digital Forensics",
+          "Connaître la chaîne de possession (chain of custody)",
+          "Distinguer les types de forensics (disque, mémoire, réseau, mobile)",
+        ],
+      },
+      {
+        title: "Concepts techniques essentiels",
+        objectives: [
+          "Comprendre le fonctionnement du stockage numérique",
+          "Connaître les formats d'image forensique",
+          "Utiliser les outils d'investigation numérique",
+        ],
+      },
+      {
+        title: "Disques durs et systèmes de fichiers",
+        objectives: [
+          "Comprendre les systèmes de fichiers (NTFS, FAT, ext4)",
+          "Analyser la structure d'un disque dur",
+          "Identifier les zones de données cachées ou supprimées",
+        ],
+      },
+      {
+        title: "Acquisition des preuves numériques",
+        objectives: [
+          "Réaliser une acquisition de disque (Disk Imaging)",
+          "Acquérir la mémoire vive (RAM Acquisition)",
+          "Préserver l'intégrité des preuves (hachage)",
+        ],
+      },
+      {
+        title: "Analyse des preuves numériques",
+        objectives: [
+          "Analyser un système Windows (Windows Forensics)",
+          "Analyser les navigateurs et emails (Browser/Email Forensics)",
+          "Rédiger un rapport d'investigation numérique",
+        ],
+      },
+    ]),
+    skills: ["Digital Forensics", "Disk Imaging", "RAM Acquisition", "Windows Forensics", "Report Writing"],
+    color: "#a78bfa",
+  },
+  {
+    id: "M206",
+    code: "M206",
+    name: "Développer des stratégies de gestion des risques",
+    category: "main",
+    folder: "M206",
+    duration: 90,
+    coefficient: 2,
+    efmRegional: false,
+    description:
+      "Ce module présente les stratégies de gestion des risques en cybersécurité, les méthodes d'identification, d'évaluation, de traitement et de suivi des risques afin de protéger les systèmes d'information.",
+    objectives: [
+      "Comprendre la gestion des risques",
+      "Identifier les actifs critiques",
+      "Évaluer les menaces et vulnérabilités",
+      "Choisir une méthodologie de gestion des risques",
+      "Identifier et traiter les risques",
+      "Mettre en place une amélioration continue",
+    ],
+    chapters: detailedChapters([
+      {
+        title: "Introduction à la gestion des risques en cybersécurité",
+        objectives: [
+          "Comprendre les notions de risque, menace et vulnérabilité",
+          "Comprendre les enjeux de la gestion des risques",
+        ],
+      },
+      {
+        title: "Analyse de l'environnement",
+        objectives: [
+          "Identifier les actifs critiques de l'organisation",
+          "Cartographier l'environnement informationnel",
+        ],
+      },
+      {
+        title: "Méthodologies de gestion des risques",
+        objectives: [
+          "Appliquer la méthode ISO 27005",
+          "Appliquer la méthode NIST SP 800-30",
+          "Découvrir la méthode OCTAVE",
+        ],
+      },
+      {
+        title: "Identification des risques",
+        objectives: ["Identifier les sources de risques", "Recenser les scénarios de menaces"],
+      },
+      {
+        title: "Évaluation des risques",
+        objectives: ["Évaluer la probabilité et l'impact d'un risque", "Prioriser les risques identifiés"],
+      },
+      {
+        title: "Traitement des risques",
+        objectives: [
+          "Choisir une stratégie de traitement (éviter, réduire, transférer, accepter)",
+          "Mettre en place des mesures de mitigation",
+        ],
+      },
+      {
+        title: "Suivi et amélioration continue",
+        objectives: [
+          "Suivre l'évolution des risques dans le temps",
+          "Appliquer le cycle PDCA (Plan-Do-Check-Act)",
+        ],
+      },
+    ]),
+    skills: ["Risk Management", "ISO 27005", "NIST SP 800-30", "OCTAVE", "PDCA"],
+    color: "#22d3ee",
+  },
+];
+
+export const SECONDARY_MODULES: ModuleDef[] = [
+  {
+    id: "EGTS202",
+    code: "EGTS202",
+    name: "Français",
+    category: "secondary",
+    folder: "EGTS202 - Français",
+    duration: 115,
+    coefficient: 2,
+    efmRegional: false,
+    description:
+      "Ce module vise à renforcer la maîtrise du français à l'écrit et à l'oral dans un contexte professionnel : rédaction de rapports techniques, communication professionnelle, synthèse de documents et expression orale structurée.",
+    objectives: [
+      "Rédiger des rapports techniques clairs et structurés.",
+      "Communiquer efficacement à l'oral dans un contexte professionnel.",
+      "Synthétiser et analyser des documents techniques.",
+      "Améliorer l'orthographe, la grammaire et le style rédactionnel.",
+    ],
+    chapters: simpleChapters([
+      "Rédaction de rapports techniques",
+      "Communication professionnelle orale",
+      "Synthèse et analyse de documents",
+      "Orthographe, grammaire et style",
+    ]),
+    color: "#fb7185",
+  },
+  {
+    id: "EGTS203",
+    code: "EGTS203",
+    name: "Anglais technique",
+    category: "secondary",
+    folder: "EGTS203 - Anglais technique",
+    duration: 50,
+    coefficient: 2,
+    efmRegional: false,
+    description:
+      "Ce module permet d'acquérir le vocabulaire technique anglais utilisé en informatique et en cybersécurité, de comprendre la documentation technique en anglais, et de communiquer professionnellement à l'écrit et à l'oral.",
+    objectives: [
+      "Maîtriser le vocabulaire technique IT / cybersécurité en anglais.",
+      "Lire et comprendre de la documentation technique (RFC, CVE, writeups).",
+      "Rédiger des emails et rapports professionnels en anglais.",
+      "Suivre des cours, conférences et tutoriels cyber en anglais sans sous-titres.",
+    ],
+    chapters: simpleChapters([
+      "Vocabulaire technique IT / cybersécurité",
+      "Documentation technique (RFC, CVE, writeups)",
+      "Rédaction professionnelle en anglais",
+      "Compréhension orale technique",
+    ]),
+    color: "#48a3ff",
+  },
+  {
+    id: "EGTS204",
+    code: "EGTS204",
+    name: "Culture entrepreneuriale",
+    category: "secondary",
+    folder: "EGTS204 - Culture entrepreneuriale",
+    duration: 45,
+    coefficient: 2,
+    efmRegional: false,
+    description:
+      "Ce module introduit les notions fondamentales de l'entrepreneuriat : l'environnement économique, la création d'entreprise, le business model et l'esprit entrepreneurial.",
+    objectives: [
+      "Comprendre les bases de l'environnement entrepreneurial.",
+      "Identifier les étapes de création d'une entreprise.",
+      "Comprendre la notion de business model.",
+      "Développer un esprit entrepreneurial appliqué à la tech.",
+    ],
+    chapters: simpleChapters([
+      "Environnement entrepreneurial",
+      "Création d'entreprise",
+      "Business model",
+      "Esprit entrepreneurial appliqué à la tech",
+    ]),
+    color: "#fbbf24",
+  },
+  {
+    id: "EGTS205",
+    code: "EGTS205",
+    name: "Compétences comportementales",
+    category: "secondary",
+    folder: "EGTS205 - Compétences comportementales",
+    duration: 30,
+    coefficient: 2,
+    efmRegional: false,
+    description:
+      "Ce module développe les soft skills essentielles au monde professionnel : communication interpersonnelle, travail d'équipe, gestion du temps et gestion du stress.",
+    objectives: [
+      "Améliorer la communication interpersonnelle.",
+      "Travailler efficacement en équipe.",
+      "Gérer son temps et ses priorités.",
+      "Gérer le stress et la pression dans un contexte professionnel.",
+    ],
+    chapters: simpleChapters([
+      "Communication interpersonnelle",
+      "Travail d'équipe",
+      "Gestion du temps et des priorités",
+      "Gestion du stress",
+    ]),
+    color: "#34d399",
+  },
+  {
+    id: "EGTS208",
+    code: "EGTS208",
+    name: "Entrepreneuriat - PIE 2",
+    category: "secondary",
+    folder: "EGTS208 - Entrepreneuriat-PIE 2",
+    duration: 80,
+    coefficient: 2,
+    efmRegional: false,
+    description:
+      "Ce module accompagne l'élaboration d'un Projet Innovant d'Entreprise (PIE) : étude de marché, plan d'affaires, présentation et pitch du projet.",
+    objectives: [
+      "Élaborer une étude de marché.",
+      "Construire un plan d'affaires (business plan).",
+      "Structurer et présenter un projet entrepreneurial (pitch).",
+      "Appliquer les notions d'entrepreneuriat à un projet concret, idéalement lié à la cybersécurité.",
+    ],
+    chapters: simpleChapters([
+      "Étude de marché",
+      "Plan d'affaires (business plan)",
+      "Structuration et pitch du projet",
+      "Application à un projet cyber",
+    ]),
+    color: "#a78bfa",
+  },
+  {
+    id: "EGTSA206",
+    code: "EGTSA206",
+    name: "Culture et techniques avancées du numérique",
+    category: "secondary",
+    folder: "EGTSA206 - Culture et techniques avancées du numérique",
+    duration: 30,
+    coefficient: 1,
+    efmRegional: false,
+    description:
+      "Ce module développe la culture numérique générale et la veille technologique : tendances du numérique, outils numériques avancés, transformation digitale.",
+    objectives: [
+      "Comprendre les grandes tendances du numérique.",
+      "Effectuer une veille technologique structurée.",
+      "Utiliser des outils numériques avancés.",
+      "Comprendre les enjeux de la transformation digitale.",
+    ],
+    chapters: simpleChapters([
+      "Tendances du numérique",
+      "Veille technologique",
+      "Outils numériques avancés",
+      "Transformation digitale",
+    ]),
+    color: "#22d3ee",
+  },
+];
+
+export const ALL_MODULES: ModuleDef[] = [...MAIN_MODULES, ...SECONDARY_MODULES];
+
+export function getModuleById(id: string): ModuleDef | undefined {
+  return ALL_MODULES.find((m) => m.id === id);
+}
+
+export function countObjectives(module: ModuleDef): number {
+  return module.chapters.reduce((sum, ch) => sum + ch.objectives.length, 0);
+}
