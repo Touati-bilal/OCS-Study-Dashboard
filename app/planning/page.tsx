@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { HydrationGate } from "@/components/layout/HydrationGate";
 import { ModuleTabs } from "@/components/modules/ModuleTabs";
 import { InternshipCard } from "@/components/planning/InternshipCard";
 import { WeeklyCalendar } from "@/components/planning/WeeklyCalendar";
@@ -26,26 +25,24 @@ export default function PlanningHubPage() {
       <PageHeader title="Planning Hub" subtitle="Stage & examens" />
       <ModuleTabs tabs={TABS} active={tab} onChange={setTab} color="#48a3ff" />
 
-      <HydrationGate>
-        <div className="flex flex-col gap-4 px-5 py-4 md:px-8 lg:px-10">
-          {tab === "stage" && (
-            <>
-              <InternshipCard />
-              {currentInternship ? (
-                <WeeklyCalendar internshipId={currentInternship.id} />
-              ) : (
-                <p className="text-center text-xs text-white/35">
-                  Crée un stage pour activer le calendrier hebdomadaire.
-                </p>
-              )}
-            </>
-          )}
+      <div className="flex flex-col gap-4 px-5 py-4 md:px-8 lg:px-10">
+        {tab === "stage" && (
+          <>
+            <InternshipCard />
+            {currentInternship ? (
+              <WeeklyCalendar internshipId={currentInternship.id} />
+            ) : (
+              <p className="text-center text-xs text-white/35">
+                Crée un stage pour activer le calendrier hebdomadaire.
+              </p>
+            )}
+          </>
+        )}
 
-          {tab === "journal" && <JournalList />}
+        {tab === "journal" && <JournalList />}
 
-          {tab === "examens" && <ExamList />}
-        </div>
-      </HydrationGate>
+        {tab === "examens" && <ExamList />}
+      </div>
     </>
   );
 }

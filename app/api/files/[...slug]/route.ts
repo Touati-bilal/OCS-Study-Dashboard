@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { DATA_ROOT } from "@/lib/materials.server";
+import { DATA_ROOT, DATA_SUBROOTS } from "@/lib/materials.server";
 
 const MIME: Record<string, string> = {
   ".pdf": "application/pdf",
@@ -19,7 +19,7 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
   const targetPath = path.join(resolvedRoot, ...params.slug);
   const resolvedTarget = path.resolve(targetPath);
 
-  if (!resolvedTarget.startsWith(resolvedRoot)) {
+  if (!resolvedTarget.startsWith(resolvedRoot + path.sep) || !DATA_SUBROOTS.has(params.slug[0])) {
     return new NextResponse("Forbidden", { status: 403 });
   }
   if (!fs.existsSync(resolvedTarget) || !fs.statSync(resolvedTarget).isFile()) {

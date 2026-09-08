@@ -1,7 +1,11 @@
 import fs from "fs";
 import path from "path";
 
-export const DATA_ROOT = path.join(process.cwd(), "CyberSecurity");
+/** Project root: every module's `folder` is a path relative to this, rooted in one of DATA_SUBROOTS. */
+export const DATA_ROOT = process.cwd();
+
+/** Top-level directories the file-serving API is allowed to read from (defense in depth). */
+export const DATA_SUBROOTS = new Set(["CyberSecurity", "CC", "RS"]);
 
 export interface MaterialFile {
   name: string;
@@ -19,6 +23,8 @@ export function getModuleMaterials(folder: string): MaterialFile[] {
   const results: MaterialFile[] = [];
   if (!fs.existsSync(moduleRoot)) return results;
 
+  const folderParts = folder.split("/").filter(Boolean);
+
   function walk(dir: string, relParts: string[]) {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
@@ -31,7 +37,7 @@ export function getModuleMaterials(folder: string): MaterialFile[] {
         const ext = path.extname(entry.name).toLowerCase();
         if (!ALLOWED_EXT.has(ext)) continue;
         const stat = fs.statSync(full);
-        const relParts_ = [folder, ...relParts, entry.name];
+        const relParts_ = [...folderParts, ...relParts, entry.name];
         const category =
           relParts.length > 0 ? relParts[relParts.length - 1].replace(/^\d+\s*-\s*/, "") : "Fichiers";
         results.push({
