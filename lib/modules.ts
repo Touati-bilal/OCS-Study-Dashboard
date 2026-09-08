@@ -1,3 +1,5 @@
+import type { StudyOption } from "./types";
+
 export interface LearningObjective {
   id: string;
   text: string;
@@ -409,6 +411,210 @@ export const MAIN_MODULES: ModuleDef[] = [
   },
 ];
 
+/** Practical modules for the OCC (Cloud Computing) option. */
+export const MAIN_MODULES_OCC: ModuleDef[] = [
+  {
+    id: "OCC-M201",
+    code: "M201",
+    name: "Comprendre l'architecture Cloud",
+    category: "main",
+    folder: "OCC/M201",
+    duration: 45,
+    coefficient: 2,
+    efmRegional: false,
+    description: "Ce module permet de comprendre l'architecture Cloud.",
+    objectives: [],
+    chapters: simpleChapters(["Comprendre l'architecture Cloud"]),
+    color: "#48a3ff",
+  },
+  {
+    id: "OCC-M202",
+    code: "M202",
+    name: "Explorer un environnement Cloud propriétaire en ligne public",
+    category: "main",
+    folder: "OCC/M202",
+    duration: 45,
+    coefficient: 2,
+    efmRegional: true,
+    description: "Ce module permet d'explorer un environnement Cloud propriétaire en ligne public.",
+    objectives: [],
+    chapters: simpleChapters(["Explorer un environnement Cloud propriétaire en ligne public"]),
+    color: "#fb7185",
+  },
+  {
+    id: "OCC-M203",
+    code: "M203",
+    name: "Implémenter un environnement Cloud avec une solution libre",
+    category: "main",
+    folder: "OCC/M203",
+    duration: 135,
+    coefficient: 3,
+    efmRegional: true,
+    description: "Ce module permet d'implémenter un environnement Cloud avec une solution libre.",
+    objectives: [],
+    chapters: simpleChapters(["Implémenter un environnement Cloud avec une solution libre"]),
+    color: "#fbbf24",
+  },
+  {
+    id: "OCC-M204",
+    code: "M204",
+    name: "Administrer un environnement Cloud propriétaire en ligne public",
+    category: "main",
+    folder: "OCC/M204",
+    duration: 105,
+    coefficient: 3,
+    efmRegional: true,
+    description: "Ce module permet d'administrer un environnement Cloud propriétaire en ligne public.",
+    objectives: [],
+    chapters: simpleChapters(["Administrer un environnement Cloud propriétaire en ligne public"]),
+    color: "#34d399",
+  },
+  {
+    id: "OCC-M205",
+    code: "M205",
+    name: "Sécuriser un environnement Cloud propriétaire en ligne public",
+    category: "main",
+    folder: "OCC/M205",
+    duration: 105,
+    coefficient: 3,
+    efmRegional: false,
+    description: "Ce module permet de sécuriser un environnement Cloud propriétaire en ligne public.",
+    objectives: [],
+    chapters: simpleChapters(["Sécuriser un environnement Cloud propriétaire en ligne public"]),
+    color: "#a78bfa",
+  },
+  {
+    id: "OCC-M206",
+    code: "M206",
+    name: "Gouverner les données dans le Cloud",
+    category: "main",
+    folder: "OCC/M206",
+    duration: 75,
+    coefficient: 2,
+    efmRegional: false,
+    description: "Ce module permet de gouverner les données dans le Cloud.",
+    objectives: [],
+    chapters: simpleChapters(["Gouverner les données dans le Cloud"]),
+    color: "#22d3ee",
+  },
+  {
+    id: "OCC-M207",
+    code: "M207",
+    name: "Établir une stratégie de maintien d'un SI dans un Cloud propriétaire en ligne public",
+    category: "main",
+    folder: "OCC/M207",
+    duration: 90,
+    coefficient: 2,
+    efmRegional: false,
+    description: "Ce module permet d'établir une stratégie de maintien d'un SI dans un Cloud propriétaire en ligne public.",
+    objectives: [],
+    chapters: simpleChapters(["Établir une stratégie de maintien d'un SI dans un Cloud propriétaire en ligne public"]),
+    color: "#2dd4bf",
+  },
+];
+
+/** Practical modules for the ORS (Réseaux & Systèmes) option. */
+export const MAIN_MODULES_ORS: ModuleDef[] = [
+  {
+    id: "ORS-M201",
+    code: "M201",
+    name: "Mise en place d'une infrastructure réseaux",
+    category: "main",
+    folder: "ORS/M201",
+    duration: 120,
+    coefficient: 3,
+    efmRegional: true,
+    description: "Ce module permet de mettre en place une infrastructure réseaux.",
+    objectives: [],
+    chapters: simpleChapters(["Mise en place d'une infrastructure réseaux"]),
+    color: "#48a3ff",
+  },
+  {
+    id: "ORS-M202",
+    code: "M202",
+    name: "Administration d'un environnement Windows",
+    category: "main",
+    folder: "ORS/M202",
+    duration: 105,
+    coefficient: 3,
+    efmRegional: true,
+    description: "Ce module permet d'administrer un environnement Windows.",
+    objectives: [],
+    chapters: simpleChapters(["Administration d'un environnement Windows"]),
+    color: "#fb7185",
+  },
+  {
+    id: "ORS-M203",
+    code: "M203",
+    name: "Administration d'un environnement Cloud",
+    category: "main",
+    folder: "ORS/M203",
+    duration: 75,
+    coefficient: 2,
+    efmRegional: false,
+    description: "Ce module permet d'administrer un environnement Cloud.",
+    objectives: [],
+    chapters: simpleChapters(["Administration d'un environnement Cloud"]),
+    color: "#fbbf24",
+  },
+  {
+    id: "ORS-M204",
+    code: "M204",
+    name: "Enjeux de la technologie SDN",
+    category: "main",
+    folder: "ORS/M204",
+    duration: 85,
+    coefficient: 2,
+    efmRegional: false,
+    description: "Ce module présente les enjeux de la technologie SDN.",
+    objectives: [],
+    chapters: simpleChapters(["Enjeux de la technologie SDN"]),
+    color: "#34d399",
+  },
+  {
+    id: "ORS-M205",
+    code: "M205",
+    name: "Administration d'un environnement Linux",
+    category: "main",
+    folder: "ORS/M205",
+    duration: 105,
+    coefficient: 3,
+    efmRegional: true,
+    description: "Ce module permet d'administrer un environnement Linux.",
+    objectives: [],
+    chapters: simpleChapters(["Administration d'un environnement Linux"]),
+    color: "#a78bfa",
+  },
+  {
+    id: "ORS-M206",
+    code: "M206",
+    name: "Sécurité d'une infrastructure digitale",
+    category: "main",
+    folder: "ORS/M206",
+    duration: 75,
+    coefficient: 2,
+    efmRegional: true,
+    description: "Ce module permet d'assurer la sécurité d'une infrastructure digitale.",
+    objectives: [],
+    chapters: simpleChapters(["Sécurité d'une infrastructure digitale"]),
+    color: "#22d3ee",
+  },
+  {
+    id: "ORS-M207",
+    code: "M207",
+    name: "Gestion d'un projet d'infrastructure digitale",
+    category: "main",
+    folder: "ORS/M207",
+    duration: 45,
+    coefficient: 1,
+    efmRegional: false,
+    description: "Ce module permet de gérer un projet d'infrastructure digitale.",
+    objectives: [],
+    chapters: simpleChapters(["Gestion d'un projet d'infrastructure digitale"]),
+    color: "#2dd4bf",
+  },
+];
+
 export const SECONDARY_MODULES: ModuleDef[] = [
   {
     id: "EGTS202",
@@ -562,7 +768,43 @@ export const SECONDARY_MODULES: ModuleDef[] = [
   },
 ];
 
-export const ALL_MODULES: ModuleDef[] = [...MAIN_MODULES, ...SECONDARY_MODULES];
+/** Practical (main) modules keyed by study option — OCS/OCC/ORS each get their own M201-M207. */
+export const MAIN_MODULES_BY_OPTION: Record<StudyOption, ModuleDef[]> = {
+  OCS: MAIN_MODULES,
+  OCC: MAIN_MODULES_OCC,
+  ORS: MAIN_MODULES_ORS,
+};
+
+export function getMainModules(option: StudyOption | null | undefined): ModuleDef[] {
+  return option ? MAIN_MODULES_BY_OPTION[option] : [];
+}
+
+export const STUDY_OPTION_TITLES: Record<StudyOption, string> = {
+  OCS: "Cybersécurité",
+  OCC: "Cloud Computing",
+  ORS: "Réseaux & Systèmes",
+};
+
+export function getMainModulesSubtitle(option: StudyOption | null | undefined): string {
+  if (!option) return "";
+  const modules = getMainModules(option);
+  const title = STUDY_OPTION_TITLES[option];
+  if (modules.length === 0) return `${title} — modules à venir`;
+  return `${title} — ${modules[0].code} à ${modules[modules.length - 1].code}`;
+}
+
+/** Main modules for the given option plus the EGTS modules shared across every option. */
+export function getModulesForOption(option: StudyOption | null | undefined): ModuleDef[] {
+  return [...getMainModules(option), ...SECONDARY_MODULES];
+}
+
+/** Flat list of every module across every option — used for static route generation and id lookups. */
+export const ALL_MODULES: ModuleDef[] = [
+  ...MAIN_MODULES,
+  ...MAIN_MODULES_OCC,
+  ...MAIN_MODULES_ORS,
+  ...SECONDARY_MODULES,
+];
 
 export function getModuleById(id: string): ModuleDef | undefined {
   return ALL_MODULES.find((m) => m.id === id);

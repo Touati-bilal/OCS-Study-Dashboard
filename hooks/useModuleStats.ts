@@ -8,7 +8,7 @@ import {
   countCompletedObjectives,
   countCompletedChapters,
 } from "@/store/useAppStore";
-import { ALL_MODULES, ModuleDef, countObjectives } from "@/lib/modules";
+import { ModuleDef, countObjectives, getModulesForOption } from "@/lib/modules";
 import { computeFinalGrade } from "@/lib/grades";
 
 export interface ModuleStat {
@@ -26,11 +26,13 @@ export interface ModuleStat {
   totalObjectives: number;
 }
 
-export function useModuleStats(modules: ModuleDef[] = ALL_MODULES): ModuleStat[] {
+export function useModuleStats(modules?: ModuleDef[]): ModuleStat[] {
   const moduleState = useAppStore((s) => s.modules);
+  const studyOption = useAppStore((s) => s.studyOption);
+  const resolvedModules = modules ?? getModulesForOption(studyOption);
 
   return useMemo(() => {
-    return modules.map((module) => {
+    return resolvedModules.map((module) => {
       const runtime = moduleState[module.id];
       const totalObjectives = countObjectives(module);
       const progress = computeModuleProgress(runtime, totalObjectives);
@@ -50,10 +52,10 @@ export function useModuleStats(modules: ModuleDef[] = ALL_MODULES): ModuleStat[]
         totalObjectives,
       };
     });
-  }, [modules, moduleState]);
+  }, [resolvedModules, moduleState]);
 }
 
-export function useAggregateStats(modules: ModuleDef[] = ALL_MODULES) {
+export function useAggregateStats(modules?: ModuleDef[]) {
   const stats = useModuleStats(modules);
   return useMemo(() => {
     const totalHours = stats.reduce((sum, s) => sum + s.hoursStudied, 0);

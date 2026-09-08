@@ -11,20 +11,26 @@ import type {
   InternshipEvent,
   JournalEntry,
   ModuleRuntime,
+  Note,
+  StudyOption,
   Task,
 } from "@/lib/types";
 
 function emptyModuleRuntime(): ModuleRuntime {
-  return { hoursStudied: 0, ccGrade: null, efmGrade: null, objectiveStatus: {}, notes: "" };
+  return { hoursStudied: 0, ccGrade: null, efmGrade: null, objectiveStatus: {} };
 }
 
 interface AppState {
+  studyOption: StudyOption | null;
   modules: Record<string, ModuleRuntime>;
   tasks: Task[];
   internships: Internship[];
   internshipEvents: InternshipEvent[];
   journalEntries: JournalEntry[];
   exams: Exam[];
+  notes: Note[];
+
+  setStudyOption: (option: StudyOption) => void;
 
   getModuleRuntime: (moduleId: string) => ModuleRuntime;
   toggleObjective: (moduleId: string, objectiveId: string) => void;
@@ -32,7 +38,9 @@ interface AppState {
   setHoursStudied: (moduleId: string, hours: number) => void;
   addHours: (moduleId: string, delta: number) => void;
   setGrades: (moduleId: string, cc: number | null, efm: number | null) => void;
-  setModuleNotes: (moduleId: string, notes: string) => void;
+
+  addNote: (moduleId: string, text: string) => void;
+  deleteNote: (id: string) => void;
 
   addTask: (task: Omit<Task, "id" | "createdAt" | "completed">) => void;
   updateTask: (id: string, patch: Partial<Task>) => void;
@@ -58,12 +66,16 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
+      studyOption: null,
       modules: {},
       tasks: [],
       internships: [],
       internshipEvents: [],
       journalEntries: [],
       exams: [],
+      notes: [],
+
+      setStudyOption: (option) => set({ studyOption: option }),
 
       getModuleRuntime: (moduleId) => {
         return get().modules[moduleId] ?? emptyModuleRuntime();
@@ -116,11 +128,15 @@ export const useAppStore = create<AppState>()(
           };
         }),
 
-      setModuleNotes: (moduleId, notes) =>
-        set((state) => {
-          const current = state.modules[moduleId] ?? emptyModuleRuntime();
-          return { modules: { ...state.modules, [moduleId]: { ...current, notes } } };
-        }),
+      addNote: (moduleId, text) =>
+        set((state) => ({
+          notes: [
+            { id: uid(), moduleId, text, createdAt: new Date().toISOString() },
+            ...state.notes,
+          ],
+        })),
+
+      deleteNote: (id) => set((state) => ({ notes: state.notes.filter((n) => n.id !== id) })),
 
       addTask: (task) =>
         set((state) => ({
@@ -207,17 +223,32 @@ export const useAppStore = create<AppState>()(
     {
       name: "ocs-study-dashboard",
       storage: createJSONStorage(() => (typeof window !== "undefined" ? window.localStorage : (undefined as unknown as Storage))),
-      version: 2,
+      version: 3,
       skipHydration: true,
       migrate: (persistedState) => {
-        const state = persistedState as { modules?: Record<string, any>; internships?: any[] } | undefined;
+        const state = persistedState as
+          | { modules?: Record<string, any>; internships?: any[]; notes?: Note[] }
+          | undefined;
         if (state?.modules) {
+          const migratedNotes: Note[] = [];
           for (const key of Object.keys(state.modules)) {
             const m = state.modules[key];
             if (!m.objectiveStatus) {
               m.objectiveStatus = {};
               delete m.chapterStatus;
             }
+            if (typeof m.notes === "string" && m.notes.trim()) {
+              migratedNotes.push({
+                id: uid(),
+                moduleId: key,
+                text: m.notes.trim(),
+                createdAt: new Date().toISOString(),
+              });
+            }
+            delete m.notes;
+          }
+          if (migratedNotes.length) {
+            state.notes = [...migratedNotes, ...(state.notes ?? [])];
           }
         }
         if (state?.internships) {

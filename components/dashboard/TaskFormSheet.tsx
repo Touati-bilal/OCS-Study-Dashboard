@@ -5,7 +5,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { FieldGroup, Input, Label, Select, Textarea } from "@/components/ui/Field";
 import { useAppStore } from "@/store/useAppStore";
-import { ALL_MODULES } from "@/lib/modules";
+import { getModulesForOption } from "@/lib/modules";
 import type { Task } from "@/lib/types";
 
 export function TaskFormSheet({
@@ -21,6 +21,8 @@ export function TaskFormSheet({
 }) {
   const addTask = useAppStore((s) => s.addTask);
   const updateTask = useAppStore((s) => s.updateTask);
+  const studyOption = useAppStore((s) => s.studyOption);
+  const availableModules = getModulesForOption(studyOption);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -83,7 +85,7 @@ export function TaskFormSheet({
           <Label>Module / catégorie</Label>
           <Select value={moduleId} onChange={(e) => setModuleId(e.target.value)}>
             <option value="">Aucun module</option>
-            {ALL_MODULES.map((m) => (
+            {availableModules.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.code} — {m.name}
               </option>

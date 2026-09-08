@@ -1,11 +1,19 @@
 export type ChapterStatus = "not_started" | "in_progress" | "completed";
 
+export type StudyOption = "OCS" | "OCC" | "ORS";
+
 export interface ModuleRuntime {
   hoursStudied: number;
   ccGrade: number | null;
   efmGrade: number | null;
   objectiveStatus: Record<string, boolean>;
-  notes: string;
+}
+
+export interface Note {
+  id: string;
+  moduleId: string;
+  text: string;
+  createdAt: string;
 }
 
 export interface Task {

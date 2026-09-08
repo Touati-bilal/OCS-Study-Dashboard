@@ -5,7 +5,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { FieldGroup, Input, Label, Select, Textarea } from "@/components/ui/Field";
 import { useAppStore } from "@/store/useAppStore";
-import { ALL_MODULES } from "@/lib/modules";
+import { getModulesForOption } from "@/lib/modules";
 import type { Exam } from "@/lib/types";
 
 const EMPTY = { name: "", module: "", date: "", time: "", location: "", notes: "" };
@@ -22,6 +22,8 @@ export function ExamFormSheet({
   const addExam = useAppStore((s) => s.addExam);
   const updateExam = useAppStore((s) => s.updateExam);
   const deleteExam = useAppStore((s) => s.deleteExam);
+  const studyOption = useAppStore((s) => s.studyOption);
+  const availableModules = getModulesForOption(studyOption);
   const [form, setForm] = useState(EMPTY);
 
   useEffect(() => {
@@ -51,7 +53,7 @@ export function ExamFormSheet({
           <Label>Module</Label>
           <Select value={form.module} onChange={(e) => set("module", e.target.value)}>
             <option value="">Sélectionner...</option>
-            {ALL_MODULES.map((m) => (
+            {availableModules.map((m) => (
               <option key={m.id} value={`${m.code} — ${m.name}`}>
                 {m.code} — {m.name}
               </option>
