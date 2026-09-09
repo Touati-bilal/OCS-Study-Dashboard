@@ -1,11 +1,13 @@
 import fs from "fs";
 import path from "path";
 
-/** Project root: every module's `folder` is a path relative to this, rooted in one of DATA_SUBROOTS. */
-export const DATA_ROOT = process.cwd();
-
-/** Top-level directories the file-serving API is allowed to read from (defense in depth). */
-export const DATA_SUBROOTS = new Set(["CyberSecurity", "CC", "RS"]);
+/**
+ * Materials root: every module's `folder` is a path relative to this, which lives under
+ * `public/materials` so Next.js serves the files as static assets directly (no custom API
+ * route or server-side file tracing involved — this works identically in dev and in any
+ * production/serverless deployment, since `public/` is always shipped in full).
+ */
+export const DATA_ROOT = path.join(process.cwd(), "public", "materials");
 
 export interface MaterialFile {
   name: string;
@@ -45,7 +47,7 @@ export function getModuleMaterials(folder: string): MaterialFile[] {
           category,
           ext,
           sizeKb: Math.max(1, Math.round(stat.size / 1024)),
-          url: "/api/files/" + relParts_.map(encodeURIComponent).join("/"),
+          url: "/materials/" + relParts_.map(encodeURIComponent).join("/"),
         });
       }
     }
