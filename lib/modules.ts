@@ -424,7 +424,28 @@ export const MAIN_MODULES_OCC: ModuleDef[] = [
     efmRegional: false,
     description: "Ce module permet de comprendre l'architecture Cloud.",
     objectives: [],
-    chapters: simpleChapters(["Comprendre l'architecture Cloud"]),
+    chapters: detailedChapters([
+      {
+        title: "Identifier les concepts du Cloud",
+        objectives: ["Découvrir le Cloud", "Connaitre les pertinences de passage au Cloud"],
+      },
+      {
+        title: "Comprendre la structure du Cloud",
+        objectives: ["Appréhender les types de service Cloud", "Différencier les modèles de déploiement Cloud"],
+      },
+      {
+        title: "Mesurer les apports du Cloud pour l'entreprise",
+        objectives: ["Suivre la tendance du marché Cloud", "Identifier l'impact du Cloud sur les entreprises"],
+      },
+      {
+        title: "Découvrir les utilisations du Cloud",
+        objectives: [
+          "Comprendre la mise à l'échelle des ressources Cloud",
+          "Découvrir les mécanismes de performance et de la haute disponibilité",
+          "Articuler les aspects financiers du Cloud",
+        ],
+      },
+    ]),
     color: "#48a3ff",
   },
   {
@@ -438,7 +459,28 @@ export const MAIN_MODULES_OCC: ModuleDef[] = [
     efmRegional: true,
     description: "Ce module permet d'explorer un environnement Cloud propriétaire en ligne public.",
     objectives: [],
-    chapters: simpleChapters(["Explorer un environnement Cloud propriétaire en ligne public"]),
+    chapters: detailedChapters([
+      {
+        title: "S'initier avec le fournisseur Cloud",
+        objectives: [
+          "Comparer les fournisseurs géants du Cloud",
+          "Découvrir l'historique du fournisseur Cloud à explorer",
+        ],
+      },
+      {
+        title: "Initialiser les accès au portail du fournisseur Cloud",
+        objectives: ["Créer un abonnement", "Paramétrer le portail"],
+      },
+      {
+        title: "Explorer les services du fournisseur Cloud",
+        objectives: [
+          "Découvrir les ressources techniques",
+          "Répertorier les services opérationnels",
+          "Explorer les aspects de facturation",
+          "Identifier les offres de service avancées",
+        ],
+      },
+    ]),
     color: "#fb7185",
   },
   {
@@ -466,7 +508,46 @@ export const MAIN_MODULES_OCC: ModuleDef[] = [
     efmRegional: true,
     description: "Ce module permet d'administrer un environnement Cloud propriétaire en ligne public.",
     objectives: [],
-    chapters: simpleChapters(["Administrer un environnement Cloud propriétaire en ligne public"]),
+    chapters: detailedChapters([
+      {
+        title: "Provisionner une machine virtuelle",
+        objectives: [
+          "Établir les prérequis à la création d'une VM",
+          "Créer une machine virtuelle",
+          "Configurer la disponibilité des VM",
+        ],
+      },
+      {
+        title: "Déployer un réseau virtuel",
+        objectives: [
+          "Explorer les aspects de base d'un réseau virtuel",
+          "Explorer les aspects avancés d'un réseau virtuel",
+        ],
+      },
+      {
+        title: "Gérer les données",
+        objectives: ["Explorer les fonctionnalités de stockage", "Découvrir les types de stockage"],
+      },
+      {
+        title: "Administrer des applications web",
+        objectives: [
+          "Administrer un site web avec des machines virtuelles",
+          "Administrer un site web avec un service géré (PaaS)",
+        ],
+      },
+      {
+        title: "Déployer la conteneurisation",
+        objectives: [
+          "Connaitre les concepts de base de la conteneurisation",
+          "Gérer les images des conteneurs",
+          "Déployer des conteneurs",
+        ],
+      },
+      {
+        title: "Maintenir un environnement de production",
+        objectives: ["Gouverner les ressources Cloud", "Assurer le bon fonctionnement des ressources"],
+      },
+    ]),
     color: "#34d399",
   },
   {
@@ -480,7 +561,25 @@ export const MAIN_MODULES_OCC: ModuleDef[] = [
     efmRegional: false,
     description: "Ce module permet de sécuriser un environnement Cloud propriétaire en ligne public.",
     objectives: [],
-    chapters: simpleChapters(["Sécuriser un environnement Cloud propriétaire en ligne public"]),
+    chapters: detailedChapters([
+      {
+        title: "Se préparer pour la sécurité dans le Cloud",
+        objectives: ["Identifier les enjeux de sécurité Cloud", "Appréhender des aspects de sécurité Cloud"],
+      },
+      {
+        title: "Adopter une infrastructure Cloud sécurisée",
+        objectives: [
+          "Renforcer la sécurité des VM",
+          "Sécuriser le réseau",
+          "Gérer les identités",
+          "Protéger les données",
+        ],
+      },
+      {
+        title: "Superviser les ressources Cloud",
+        objectives: ["Utiliser les outils natifs du Cloud", "Utiliser un outil externe SIEM"],
+      },
+    ]),
     color: "#a78bfa",
   },
   {
@@ -526,7 +625,53 @@ export const MAIN_MODULES_ORS: ModuleDef[] = [
     efmRegional: true,
     description: "Ce module permet de mettre en place une infrastructure réseaux.",
     objectives: [],
-    chapters: simpleChapters(["Mise en place d'une infrastructure réseaux"]),
+    chapters: detailedChapters([
+      {
+        title: "Maîtriser les concepts de commutation",
+        objectives: [
+          "Configurer les périphériques réseaux",
+          "Appliquer les concepts de commutation",
+          "Mettre en œuvre des VLAN",
+        ],
+      },
+      {
+        title: "Établir un réseau d'entreprise évolutif",
+        objectives: [
+          "Étudier l'évolutivité du réseau",
+          "Implémenter la redondance dans les réseaux commutés sans boucle",
+          "Configurer l'agrégation des liaisons",
+          "Comprendre le concept du FHRP",
+        ],
+      },
+      {
+        title: "Mettre en œuvre les protocoles de configuration dynamique",
+        objectives: ["Comprendre le fonctionnement de DHCPv4", "Comprendre le fonctionnement de SLAAC et DHCPv6"],
+      },
+      {
+        title: "Sécuriser un réseau local",
+        objectives: ["Sécuriser la couche 2 du réseau LAN", "Concevoir et sécuriser un réseau local sans fil"],
+      },
+      {
+        title: "Mettre en œuvre le routage d'un réseau d'entreprise",
+        objectives: [
+          "Comprendre les concepts de routage",
+          "Implémenter le protocole OSPF à zone unique et multiple",
+          "Implémenter le protocole BGP",
+        ],
+      },
+      {
+        title: "Gérer la connectivité des réseaux d'entreprise",
+        objectives: [
+          "Étudier les réseaux étendus",
+          "Sécuriser l'accès aux réseaux",
+          "Mettre en place un système de gestion et de supervision des réseaux",
+        ],
+      },
+      {
+        title: "Mettre en place une solution VOIP",
+        objectives: ["Présentation de la téléphonie classique", "Décrire l'architecture VOIP"],
+      },
+    ]),
     color: "#48a3ff",
   },
   {
@@ -540,7 +685,19 @@ export const MAIN_MODULES_ORS: ModuleDef[] = [
     efmRegional: true,
     description: "Ce module permet d'administrer un environnement Windows.",
     objectives: [],
-    chapters: simpleChapters(["Administration d'un environnement Windows"]),
+    chapters: simpleChapters([
+      "Installation Windows Server 2019",
+      "Console de gestion de serveur",
+      "Service de domaine Active Directory",
+      "Gestion des objets Active Directory",
+      "Implémentation d'un serveur DHCP",
+      "Implémentation d'un serveur DNS",
+      "Infrastructure des stratégies de groupe",
+      "Implémentation d'un serveur de fichiers",
+      "Gestion du système de fichiers DFS",
+      "Gestion de politique de sécurité",
+      "Implémentation du service de déploiement",
+    ]),
     color: "#fb7185",
   },
   {
@@ -554,7 +711,42 @@ export const MAIN_MODULES_ORS: ModuleDef[] = [
     efmRegional: false,
     description: "Ce module permet d'administrer un environnement Cloud.",
     objectives: [],
-    chapters: simpleChapters(["Administration d'un environnement Cloud"]),
+    chapters: detailedChapters([
+      {
+        title: "Acquérir les concepts de base du Cloud Computing",
+        objectives: [
+          "Comprendre le Cloud Computing comme solution clé-en-main",
+          "Designer les technologies « enablers »",
+          "Schématiser les modèles et services Cloud",
+        ],
+      },
+      {
+        title: "Gérer les composants essentiels d'une plateforme Cloud",
+        objectives: [
+          "Comprendre les composants essentiels de la plateforme Cloud",
+          "Gérer les accès",
+          "Gérer les ressources matérielles et logicielles",
+          "Gérer les données en Cloud",
+          "Gérer les performances",
+        ],
+      },
+      {
+        title: "Comparer les plateformes propriétaires et open source",
+        objectives: [
+          "Présenter les plateformes propriétaires",
+          "Mettre en place une plateforme open source : OpenStack",
+          "Se familiariser avec les outils d'automatisation et d'orchestration",
+        ],
+      },
+      {
+        title: "Comprendre les concepts de migration vers le Cloud",
+        objectives: [
+          "Comparer l'hébergement Cloud et l'hébergement local",
+          "Identifier les démarches de migration",
+          "Manipuler les outils de migration vers le Cloud",
+        ],
+      },
+    ]),
     color: "#fbbf24",
   },
   {
@@ -568,7 +760,27 @@ export const MAIN_MODULES_ORS: ModuleDef[] = [
     efmRegional: false,
     description: "Ce module présente les enjeux de la technologie SDN.",
     objectives: [],
-    chapters: simpleChapters(["Enjeux de la technologie SDN"]),
+    chapters: detailedChapters([
+      {
+        title: "Comprendre les réseaux informatiques en nuage",
+        objectives: [
+          "Définir le Cloud Networking",
+          "Présenter la IAC (Infrastructure as a Code) et les API",
+        ],
+      },
+      {
+        title: "Utiliser le Software Defined Network (SDN)",
+        objectives: [
+          "Maîtriser les concepts de base de la technologie SDN",
+          "Analyser les contrôleurs OpenFlow",
+          "Assurer la sécurité dans les environnements SDN",
+        ],
+      },
+      {
+        title: "Utiliser les protocoles",
+        objectives: ["Découvrir les services et protocoles de routage dans le SDN", "Étudier les solutions SDN"],
+      },
+    ]),
     color: "#34d399",
   },
   {
@@ -596,7 +808,53 @@ export const MAIN_MODULES_ORS: ModuleDef[] = [
     efmRegional: true,
     description: "Ce module permet d'assurer la sécurité d'une infrastructure digitale.",
     objectives: [],
-    chapters: simpleChapters(["Sécurité d'une infrastructure digitale"]),
+    chapters: detailedChapters([
+      {
+        title: "Les bases de la sécurité informatique",
+        objectives: [
+          "Notions de base",
+          "Composantes sécuritaires",
+          "Bonnes pratiques et recommandations",
+          "Sécurité du poste de travail",
+        ],
+      },
+      {
+        title: "Les réglementations juridiques",
+        objectives: [
+          "Introduction à la cybercriminalité",
+          "Le processus de la cyberattaque",
+          "Les risques juridiques",
+          "Les réglementations juridiques",
+        ],
+      },
+      {
+        title: "La gestion des risques et d'incidents",
+        objectives: ["Classification des risques", "Les contre-mesures", "Analyse des logs", "Framework de gestion"],
+      },
+      {
+        title: "Sécurité réseaux",
+        objectives: [
+          "Méthodes de sécurité des échanges",
+          "Sécurité architecturale",
+          "Types et principes des VPN",
+          "L'utilisation des VPN",
+          "L'architecture DM-VPN",
+          "Les IDS/IPS",
+        ],
+      },
+      {
+        title: "Les listes de contrôle d'accès",
+        objectives: ["Les Access List standards", "Les Access List nommées", "Les Access List étendues"],
+      },
+      {
+        title: "La cryptographie",
+        objectives: ["Les types d'algorithmes cryptographiques", "Complexités des algorithmes cryptographiques"],
+      },
+      {
+        title: "Infrastructure PKI",
+        objectives: ["Structure et organisation", "Les fonctions de certification"],
+      },
+    ]),
     color: "#22d3ee",
   },
   {
@@ -610,7 +868,28 @@ export const MAIN_MODULES_ORS: ModuleDef[] = [
     efmRegional: false,
     description: "Ce module permet de gérer un projet d'infrastructure digitale.",
     objectives: [],
-    chapters: simpleChapters(["Gestion d'un projet d'infrastructure digitale"]),
+    chapters: detailedChapters([
+      {
+        title: "Acquérir les connaissances de base sur la gestion de projet traditionnelle et agile selon PRINCE2",
+        objectives: [
+          "Comprendre la gestion de projet",
+          "Identifier les principes, les thèmes et les processus de PRINCE2",
+          "Découvrir la méthode PRINCE2 Agile",
+        ],
+      },
+      {
+        title: "Découvrir les compétences organisationnelles de l'ITIL",
+        objectives: ["Identifier les dernières versions d'ITIL", "Spécifier les processus de gestion des services"],
+      },
+      {
+        title: "Comprendre le fonctionnement des systèmes de gestion des tickets",
+        objectives: [
+          "Énumérer les principes de gestion des tickets IT",
+          "Maîtriser les règles principales d'entretien téléphonique",
+          "Manipuler un système de gestion des tickets",
+        ],
+      },
+    ]),
     color: "#2dd4bf",
   },
 ];
@@ -812,4 +1091,9 @@ export function getModuleById(id: string): ModuleDef | undefined {
 
 export function countObjectives(module: ModuleDef): number {
   return module.chapters.reduce((sum, ch) => sum + ch.objectives.length, 0);
+}
+
+/** True for practical modules belonging to the OCC or ORS options (ids are prefixed "OCC-"/"ORS-"). */
+export function isOccOrsModule(moduleId: string): boolean {
+  return moduleId.startsWith("OCC-") || moduleId.startsWith("ORS-");
 }

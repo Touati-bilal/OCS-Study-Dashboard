@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useAppStore, deriveChapterStatus } from "@/store/useAppStore";
-import type { ChapterDef } from "@/lib/modules";
+import { isOccOrsModule, type ChapterDef } from "@/lib/modules";
 import type { ChapterStatus } from "@/lib/types";
-import { CheckCircle2, CircleDashed, CircleDot, ChevronDown, Check, Square } from "lucide-react";
+import { CheckCircle2, CircleDashed, CircleDot, ChevronDown, Check, Search, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const STATUS_META: Record<ChapterStatus, { icon: React.ElementType; color: string; label: string }> = {
@@ -21,10 +21,39 @@ export function ChaptersList({ moduleId, chapters }: { moduleId: string; chapter
   const toggleObjective = useAppStore((s) => s.toggleObjective);
   const setChapterObjectives = useAppStore((s) => s.setChapterObjectives);
   const [openId, setOpenId] = useState<string | null>(chapters[0]?.id ?? null);
+  const [query, setQuery] = useState("");
+  const isFilterable = isOccOrsModule(moduleId);
+
+  const filteredChapters = useMemo(() => {
+    if (!isFilterable || !query.trim()) return chapters;
+    const q = query.trim().toLowerCase();
+    return chapters.filter(
+      (chapter) =>
+        chapter.title.toLowerCase().includes(q) ||
+        chapter.objectives.some((o) => o.text.toLowerCase().includes(q))
+    );
+  }, [chapters, query, isFilterable]);
 
   return (
     <div className="flex flex-col gap-2">
-      {chapters.map((chapter, i) => {
+      {isFilterable && (
+        <div className="relative mb-1">
+          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher un chapitre ou une section..."
+            className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 pl-9 pr-3 text-sm text-white/85 placeholder:text-white/30 focus:border-white/25 focus:outline-none"
+          />
+        </div>
+      )}
+      {isFilterable && filteredChapters.length === 0 && (
+        <Card hover={false} className="p-4 text-center text-xs text-white/40">
+          Aucun chapitre ne correspond à « {query} ».
+        </Card>
+      )}
+      {filteredChapters.map((chapter, i) => {
         const status = deriveChapterStatus(chapter, runtime);
         const meta = STATUS_META[status];
         const Icon = meta.icon;

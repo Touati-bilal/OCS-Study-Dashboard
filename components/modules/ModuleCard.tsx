@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import type { ModuleStat } from "@/hooks/useModuleStats";
 import { Clock3, ChevronRight, BookOpenCheck } from "lucide-react";
 import { FINAL_MAX } from "@/lib/grades";
+import { isOccOrsModule } from "@/lib/modules";
 
 export function ModuleCard({ stat, delay = 0 }: { stat: ModuleStat; delay?: number }) {
   const { module, progress, hoursStudied, finalGrade, completedChapters, totalChapters, started } = stat;
@@ -18,10 +19,20 @@ export function ModuleCard({ stat, delay = 0 }: { stat: ModuleStat; delay?: numb
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <Badge color={module.color}>{module.code}</Badge>
-              {module.efmRegional && (
-                <Badge color="#fbbf24" variant="outline" className="text-[10px]">
-                  EFM régional
+              {isOccOrsModule(module.id) ? (
+                <Badge
+                  color={module.efmRegional ? "#fbbf24" : "#64748b"}
+                  variant="outline"
+                  className="text-[10px]"
+                >
+                  {module.efmRegional ? "EFM régional" : "EFM non régional"}
                 </Badge>
+              ) : (
+                module.efmRegional && (
+                  <Badge color="#fbbf24" variant="outline" className="text-[10px]">
+                    EFM régional
+                  </Badge>
+                )
               )}
               {!started && (
                 <Badge color="#64748b" variant="outline" className="text-[10px]">

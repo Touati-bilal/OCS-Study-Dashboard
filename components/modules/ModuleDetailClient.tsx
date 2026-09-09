@@ -14,7 +14,7 @@ import { MaterialsList } from "./MaterialsList";
 import { TpProjectsSection } from "./TpProjectsSection";
 import { TodoSection } from "@/components/dashboard/TodoSection";
 import { useModuleStats } from "@/hooks/useModuleStats";
-import type { ModuleDef } from "@/lib/modules";
+import { isOccOrsModule, type ModuleDef } from "@/lib/modules";
 import type { MaterialGroup } from "@/lib/materials.server";
 import { Target } from "lucide-react";
 
@@ -58,7 +58,13 @@ export function ModuleDetailClient({
                     <Badge color="#94a3b8" variant="outline">
                       Coef. {module.coefficient}
                     </Badge>
-                    {module.efmRegional && <Badge color="#fbbf24">EFM régional</Badge>}
+                    {isOccOrsModule(module.id) ? (
+                      <Badge color={module.efmRegional ? "#fbbf24" : "#64748b"}>
+                        {module.efmRegional ? "EFM régional" : "EFM non régional"}
+                      </Badge>
+                    ) : (
+                      module.efmRegional && <Badge color="#fbbf24">EFM régional</Badge>
+                    )}
                   </div>
                   <p className="text-xs text-white/50 leading-relaxed">{module.description}</p>
                 </div>
