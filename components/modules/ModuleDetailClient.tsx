@@ -12,6 +12,7 @@ import { ChaptersList } from "./ChaptersList";
 import { NotesEditor } from "./NotesEditor";
 import { MaterialsList } from "./MaterialsList";
 import { TpProjectsSection } from "./TpProjectsSection";
+import { FilesSection } from "./FilesSection";
 import { TodoSection } from "@/components/dashboard/TodoSection";
 import { useModuleStats } from "@/hooks/useModuleStats";
 import { isOccOrsModule, type ModuleDef } from "@/lib/modules";
@@ -23,6 +24,7 @@ const BASE_TABS = [
   { id: "chapitres", label: "Chapitres" },
   { id: "notes", label: "Notes" },
   { id: "documents", label: "Documents" },
+  { id: "fichiers", label: "Les Fichiers" },
   { id: "taches", label: "Tâches" },
 ];
 
@@ -109,6 +111,8 @@ export function ModuleDetailClient({
         {tab === "notes" && <NotesEditor moduleId={module.id} />}
 
         {tab === "documents" && <MaterialsList groups={materialGroups} />}
+
+        {tab === "fichiers" && <FilesSection moduleId={module.id} />}
 
         {tab === "taches" && <TodoSection filterModuleId={module.id} compact title="Tâches du module" />}
 
