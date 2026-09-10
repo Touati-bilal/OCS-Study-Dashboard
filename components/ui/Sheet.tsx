@@ -52,7 +52,7 @@ export function Sheet({
               <h3 className="font-display text-base font-semibold">{title}</h3>
               <button
                 onClick={onClose}
-                className="rounded-full p-1.5 text-white/50 hover:bg-white/10 hover:text-white"
+                className="rounded-full p-1.5 text-ink/50 hover:bg-ink/10 hover:text-ink"
               >
                 <X size={18} />
               </button>

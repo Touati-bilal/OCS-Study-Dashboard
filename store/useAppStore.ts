@@ -14,6 +14,8 @@ import type {
   Note,
   StudyOption,
   Task,
+  TaskStatus,
+  Theme,
 } from "@/lib/types";
 
 function emptyModuleRuntime(): ModuleRuntime {
@@ -21,6 +23,7 @@ function emptyModuleRuntime(): ModuleRuntime {
 }
 
 interface AppState {
+  theme: Theme;
   studyOption: StudyOption | null;
   modules: Record<string, ModuleRuntime>;
   tasks: Task[];
@@ -29,6 +32,9 @@ interface AppState {
   journalEntries: JournalEntry[];
   exams: Exam[];
   notes: Note[];
+
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
 
   setStudyOption: (option: StudyOption) => void;
 
@@ -42,10 +48,11 @@ interface AppState {
   addNote: (moduleId: string, text: string) => void;
   deleteNote: (id: string) => void;
 
-  addTask: (task: Omit<Task, "id" | "createdAt" | "completed">) => void;
+  addTask: (task: Omit<Task, "id" | "createdAt" | "status"> & { status?: TaskStatus }) => void;
   updateTask: (id: string, patch: Partial<Task>) => void;
   deleteTask: (id: string) => void;
-  toggleTask: (id: string) => void;
+  setTaskStatus: (id: string, status: TaskStatus) => void;
+  moveTask: (id: string, deadline: string) => void;
 
   addInternship: (i: Omit<Internship, "id">) => string;
   updateInternship: (id: string, patch: Partial<Internship>) => void;
@@ -66,6 +73,7 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
+      theme: "black",
       studyOption: null,
       modules: {},
       tasks: [],
@@ -74,6 +82,9 @@ export const useAppStore = create<AppState>()(
       journalEntries: [],
       exams: [],
       notes: [],
+
+      setTheme: (theme) => set({ theme }),
+      toggleTheme: () => set((state) => ({ theme: state.theme === "black" ? "white" : "black" })),
 
       setStudyOption: (option) => set({ studyOption: option }),
 
@@ -141,7 +152,7 @@ export const useAppStore = create<AppState>()(
       addTask: (task) =>
         set((state) => ({
           tasks: [
-            { ...task, id: uid(), completed: false, createdAt: new Date().toISOString() },
+            { ...task, status: task.status ?? "todo", id: uid(), createdAt: new Date().toISOString() },
             ...state.tasks,
           ],
         })),
@@ -151,10 +162,11 @@ export const useAppStore = create<AppState>()(
 
       deleteTask: (id) => set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) })),
 
-      toggleTask: (id) =>
-        set((state) => ({
-          tasks: state.tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
-        })),
+      setTaskStatus: (id, status) =>
+        set((state) => ({ tasks: state.tasks.map((t) => (t.id === id ? { ...t, status } : t)) })),
+
+      moveTask: (id, deadline) =>
+        set((state) => ({ tasks: state.tasks.map((t) => (t.id === id ? { ...t, deadline } : t)) })),
 
       addInternship: (i) => {
         const id = uid();
@@ -223,12 +235,23 @@ export const useAppStore = create<AppState>()(
     {
       name: "ocs-study-dashboard",
       storage: createJSONStorage(() => (typeof window !== "undefined" ? window.localStorage : (undefined as unknown as Storage))),
-      version: 3,
+      version: 4,
       skipHydration: true,
       migrate: (persistedState) => {
         const state = persistedState as
-          | { modules?: Record<string, any>; internships?: any[]; notes?: Note[] }
+          | { modules?: Record<string, any>; internships?: any[]; notes?: Note[]; tasks?: any[]; theme?: Theme }
           | undefined;
+        if (state?.tasks) {
+          state.tasks = state.tasks.map((t) => ({
+            ...t,
+            deadline: t.deadline ?? todayISO(),
+            priority: t.priority ?? "medium",
+            status: t.status ?? (t.completed ? "completed" : "todo"),
+          }));
+        }
+        if (state && !state.theme) {
+          state.theme = "black";
+        }
         if (state?.modules) {
           const migratedNotes: Note[] = [];
           for (const key of Object.keys(state.modules)) {

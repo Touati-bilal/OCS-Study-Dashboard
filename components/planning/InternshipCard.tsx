@@ -21,10 +21,10 @@ export function InternshipCard() {
     return (
       <>
         <Card className="flex flex-col items-center gap-3 p-6 text-center">
-          <Briefcase size={26} className="text-white/30" />
+          <Briefcase size={26} className="text-ink/30" />
           <div>
-            <p className="text-sm font-medium text-white/70">Aucun stage enregistré</p>
-            <p className="mt-0.5 text-xs text-white/40">Crée ta fiche de stage pour commencer.</p>
+            <p className="text-sm font-medium text-ink/70">Aucun stage enregistré</p>
+            <p className="mt-0.5 text-xs text-ink/40">Crée ta fiche de stage pour commencer.</p>
           </div>
           <Button size="sm" onClick={() => setSheetOpen(true)}>
             <Plus size={14} /> Créer un stage
@@ -42,20 +42,20 @@ export function InternshipCard() {
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <Building2 size={15} className="text-brand-400" />
-              <p className="truncate text-sm font-semibold text-white/90">{current.company}</p>
+              <p className="truncate text-sm font-semibold text-ink/90">{current.company}</p>
             </div>
-            <p className="mt-0.5 truncate text-xs text-white/50">{current.title}</p>
+            <p className="mt-0.5 truncate text-xs text-ink/50">{current.title}</p>
           </div>
           <div className="flex shrink-0 gap-1">
             <button
               onClick={() => setSheetOpen(true)}
-              className="rounded-full p-1.5 text-white/40 hover:bg-white/10 hover:text-white"
+              className="rounded-full p-1.5 text-ink/40 hover:bg-ink/10 hover:text-ink"
             >
               <Pencil size={14} />
             </button>
             <button
               onClick={() => deleteInternship(current.id)}
-              className="rounded-full p-1.5 text-white/40 hover:bg-rose-500/10 hover:text-rose-400"
+              className="rounded-full p-1.5 text-ink/40 hover:bg-rose-500/10 hover:text-rose-400"
             >
               <Trash2 size={14} />
             </button>
@@ -83,11 +83,11 @@ export function InternshipCard() {
           )}
         </div>
 
-        {current.description && <p className="mt-3 text-xs leading-relaxed text-white/55">{current.description}</p>}
+        {current.description && <p className="mt-3 text-xs leading-relaxed text-ink/55">{current.description}</p>}
         {current.objectives && (
-          <div className="mt-2 rounded-xl bg-white/[0.04] p-3">
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-white/35">Objectifs</p>
-            <p className="text-xs text-white/55">{current.objectives}</p>
+          <div className="mt-2 rounded-xl bg-ink/[0.04] p-3">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-ink/35">Objectifs</p>
+            <p className="text-xs text-ink/55">{current.objectives}</p>
           </div>
         )}
 
@@ -98,7 +98,7 @@ export function InternshipCard() {
                 key={i.id}
                 onClick={() => setEditIndex(idx)}
                 className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] ${
-                  idx === editIndex ? "bg-brand-500/25 text-brand-300" : "bg-white/[0.05] text-white/45"
+                  idx === editIndex ? "bg-brand-500/25 text-brand-300" : "bg-ink/[0.05] text-ink/45"
                 }`}
               >
                 {i.company}
@@ -113,7 +113,7 @@ export function InternshipCard() {
           setEditIndex(internships.length);
           setSheetOpen(true);
         }}
-        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/15 py-2 text-xs text-white/40 hover:border-white/25 hover:text-white/60"
+        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-ink/15 py-2 text-xs text-ink/40 hover:border-ink/25 hover:text-ink/60"
       >
         <Plus size={13} /> Ajouter un autre stage
       </button>

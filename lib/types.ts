@@ -16,15 +16,21 @@ export interface Note {
   createdAt: string;
 }
 
+export type TaskPriority = "low" | "medium" | "high";
+export type TaskStatus = "todo" | "in_progress" | "completed";
+
 export interface Task {
   id: string;
   title: string;
   description?: string;
   moduleId: string | null;
-  deadline: string | null;
-  completed: boolean;
+  deadline: string;
+  priority: TaskPriority;
+  status: TaskStatus;
   createdAt: string;
 }
+
+export type Theme = "black" | "white";
 
 export interface Internship {
   id: string;

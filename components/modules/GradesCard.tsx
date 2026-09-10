@@ -28,7 +28,7 @@ export function GradesCard({ moduleId, color }: { moduleId: string; color: strin
 
   return (
     <Card className="p-4">
-      <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-white/85">
+      <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-ink/85">
         <GraduationCap size={16} className="text-brand-400" /> Notes du module
       </h3>
 
@@ -70,8 +70,8 @@ export function GradesCard({ moduleId, color }: { moduleId: string; color: strin
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl bg-white/[0.04] p-3 text-center">
-        <p className="text-[11px] text-white/40">Note finale = (CC × 0.25) + ((EFM ÷ 2) × 0.75)</p>
+      <div className="mt-4 rounded-xl bg-ink/[0.04] p-3 text-center">
+        <p className="text-[11px] text-ink/40">Note finale = (CC × 0.25) + ((EFM ÷ 2) × 0.75)</p>
         <p className="mt-1 font-display text-xl font-bold">
           {final !== null ? `${final} / ${FINAL_MAX}` : "—"}
         </p>

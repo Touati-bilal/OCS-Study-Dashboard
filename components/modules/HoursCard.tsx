@@ -13,13 +13,13 @@ export function HoursCard({ moduleId, duration, color }: { moduleId: string; dur
 
   return (
     <Card className="p-4">
-      <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-white/85">
+      <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-ink/85">
         <Clock3 size={16} className="text-brand-400" /> Heures d&apos;étude
       </h3>
       <div className="flex items-center gap-3">
         <button
           onClick={() => addHours(moduleId, -1)}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-white/70 hover:bg-white/[0.12]"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-ink/70 hover:bg-ink/[0.12]"
         >
           <Minus size={16} />
         </button>
@@ -29,9 +29,9 @@ export function HoursCard({ moduleId, duration, color }: { moduleId: string; dur
             min={0}
             value={hours}
             onChange={(e) => setHoursStudied(moduleId, Number(e.target.value) || 0)}
-            className="w-full bg-transparent text-center font-display text-2xl font-bold text-white outline-none"
+            className="w-full bg-transparent text-center font-display text-2xl font-bold text-ink outline-none"
           />
-          <p className="text-[11px] text-white/40">sur {duration}h prévues</p>
+          <p className="text-[11px] text-ink/40">sur {duration}h prévues</p>
         </div>
         <button
           onClick={() => addHours(moduleId, 1)}

@@ -19,20 +19,20 @@ export function PageHeader({
     <motion.header
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-white/5 bg-base-950/80 px-5 py-4 backdrop-blur-md md:px-8 lg:px-10"
+      className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-ink/5 bg-paper/80 px-5 py-4 backdrop-blur-md md:px-8 lg:px-10"
     >
       <div className="flex items-center gap-2 min-w-0">
         {backHref && (
           <Link
             href={backHref}
-            className="-ml-1.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/60 hover:bg-white/10 hover:text-white"
+            className="-ml-1.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink/60 hover:bg-ink/10 hover:text-ink"
           >
             <ChevronLeft size={20} />
           </Link>
         )}
         <div className="min-w-0">
-          <h1 className="truncate font-display text-lg font-semibold text-white">{title}</h1>
-          {subtitle && <p className="truncate text-xs text-white/45">{subtitle}</p>}
+          <h1 className="truncate font-display text-lg font-semibold text-ink">{title}</h1>
+          {subtitle && <p className="truncate text-xs text-ink/45">{subtitle}</p>}
         </div>
       </div>
       {right && <div className="shrink-0">{right}</div>}

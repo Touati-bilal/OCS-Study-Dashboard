@@ -8,14 +8,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        base: {
-          950: "#05070d",
-          900: "#0a0e1a",
-          850: "#0d1220",
-          800: "#111827",
-          700: "#1a2236",
-          600: "#252f47",
-        },
+        ink: "rgb(var(--ink-rgb) / <alpha-value>)",
+        paper: "rgb(var(--paper-rgb) / <alpha-value>)",
         brand: {
           50: "#eef6ff",
           100: "#d9ecff",

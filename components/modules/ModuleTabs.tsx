@@ -20,7 +20,7 @@ export function ModuleTabs({
   color: string;
 }) {
   return (
-    <div className="no-scrollbar sticky top-[65px] z-10 flex gap-1 overflow-x-auto border-b border-white/5 bg-base-950/90 px-5 py-2 backdrop-blur-md md:px-8 lg:px-10">
+    <div className="no-scrollbar sticky top-[65px] z-10 flex gap-1 overflow-x-auto border-b border-ink/5 bg-paper/90 px-5 py-2 backdrop-blur-md md:px-8 lg:px-10">
       {tabs.map((tab) => {
         const isActive = tab.id === active;
         return (
@@ -29,7 +29,7 @@ export function ModuleTabs({
             onClick={() => onChange(tab.id)}
             className={cn(
               "relative shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
-              isActive ? "text-white" : "text-white/45 hover:text-white/70"
+              isActive ? "text-ink" : "text-ink/45 hover:text-ink/70"
             )}
           >
             {isActive && (

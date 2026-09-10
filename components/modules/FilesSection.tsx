@@ -122,7 +122,7 @@ export function FilesSection({ moduleId }: { moduleId: string }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">
+        <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink/40">
           <FolderOpen size={13} className="text-brand-400" /> Les Fichiers
         </p>
         <button
@@ -145,7 +145,7 @@ export function FilesSection({ moduleId }: { moduleId: string }) {
 
       {pending.length > 0 && (
         <Card hover={false} className="flex flex-col gap-2.5 p-3">
-          <p className="text-[11px] font-medium text-white/50">
+          <p className="text-[11px] font-medium text-ink/50">
             Donnez un nom à chaque fichier avant de l'enregistrer :
           </p>
           {pending.map((p) => (
@@ -155,12 +155,12 @@ export function FilesSection({ moduleId }: { moduleId: string }) {
                 value={p.title}
                 onChange={(e) => updatePendingTitle(p.key, e.target.value)}
                 placeholder="Nom du fichier"
-                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-white/85 outline-none focus:border-brand-400/50"
+                className="min-w-0 flex-1 rounded-lg border border-ink/10 bg-ink/5 px-2.5 py-1.5 text-xs text-ink/85 outline-none focus:border-brand-400/50"
               />
-              <span className="shrink-0 text-[10px] text-white/30">{p.file.name}</span>
+              <span className="shrink-0 text-[10px] text-ink/30">{p.file.name}</span>
               <button
                 onClick={() => removePending(p.key)}
-                className="shrink-0 rounded-full p-1 text-white/30 hover:bg-rose-500/10 hover:text-rose-400"
+                className="shrink-0 rounded-full p-1 text-ink/30 hover:bg-rose-500/10 hover:text-rose-400"
               >
                 <X size={13} />
               </button>
@@ -177,7 +177,7 @@ export function FilesSection({ moduleId }: { moduleId: string }) {
       )}
 
       {!loading && files.length === 0 && pending.length === 0 && (
-        <Card hover={false} className="p-4 text-center text-xs text-white/40">
+        <Card hover={false} className="p-4 text-center text-xs text-ink/40">
           Aucun fichier importé pour ce module.
         </Card>
       )}
@@ -191,8 +191,8 @@ export function FilesSection({ moduleId }: { moduleId: string }) {
                 <Icon size={16} className="text-brand-400" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-white/85">{file.title}</p>
-                <p className="text-[11px] text-white/40">
+                <p className="truncate text-sm font-medium text-ink/85">{file.title}</p>
+                <p className="text-[11px] text-ink/40">
                   {file.ext.replace(".", "").toUpperCase() || "FICHIER"} · {file.sizeKb} Ko · {formatDate(file.uploadedAt)}
                 </p>
               </div>
@@ -201,7 +201,7 @@ export function FilesSection({ moduleId }: { moduleId: string }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Ouvrir"
-                className="shrink-0 rounded-full p-1.5 text-white/30 hover:bg-white/10 hover:text-white/70"
+                className="shrink-0 rounded-full p-1.5 text-ink/30 hover:bg-ink/10 hover:text-ink/70"
               >
                 <ExternalLink size={14} />
               </a>
@@ -209,14 +209,14 @@ export function FilesSection({ moduleId }: { moduleId: string }) {
                 href={`${file.url}?download=1`}
                 download={file.originalName}
                 title="Télécharger"
-                className="shrink-0 rounded-full p-1.5 text-white/30 hover:bg-white/10 hover:text-white/70"
+                className="shrink-0 rounded-full p-1.5 text-ink/30 hover:bg-ink/10 hover:text-ink/70"
               >
                 <Download size={14} />
               </a>
               <button
                 onClick={() => handleDelete(file.id)}
                 title="Supprimer"
-                className="shrink-0 rounded-full p-1.5 text-white/30 hover:bg-rose-500/10 hover:text-rose-400"
+                className="shrink-0 rounded-full p-1.5 text-ink/30 hover:bg-rose-500/10 hover:text-rose-400"
               >
                 <Trash2 size={14} />
               </button>

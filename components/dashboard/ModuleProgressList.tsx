@@ -15,7 +15,7 @@ export function ModuleProgressList() {
   return (
     <div className="px-5 pb-4 md:px-8 lg:px-0">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-display text-sm font-semibold text-white/85">Modules en cours</h2>
+        <h2 className="font-display text-sm font-semibold text-ink/85">Modules en cours</h2>
         <Link href="/modules" className="text-xs font-medium text-brand-400">
           Voir tout
         </Link>
@@ -23,8 +23,8 @@ export function ModuleProgressList() {
 
       {started.length === 0 ? (
         <Card className="flex flex-col items-center gap-2 p-6 text-center">
-          <Sparkles size={22} className="text-white/30" />
-          <p className="text-sm text-white/50">Aucun module entamé pour l&apos;instant.</p>
+          <Sparkles size={22} className="text-ink/30" />
+          <p className="text-sm text-ink/50">Aucun module entamé pour l&apos;instant.</p>
           <Link href="/modules" className="text-xs font-medium text-brand-400">
             Commencer un module →
           </Link>
@@ -44,17 +44,17 @@ export function ModuleProgressList() {
                         </Badge>
                       )}
                     </div>
-                    <p className="mt-1.5 truncate text-sm font-medium text-white/90">{s.module.name}</p>
+                    <p className="mt-1.5 truncate text-sm font-medium text-ink/90">{s.module.name}</p>
                   </div>
-                  <ChevronRight size={18} className="mt-1 shrink-0 text-white/30" />
+                  <ChevronRight size={18} className="mt-1 shrink-0 text-ink/30" />
                 </div>
 
                 <div className="mt-3 flex items-center gap-3">
                   <ProgressBar value={s.progress} color={s.module.color} className="flex-1" />
-                  <span className="text-xs font-semibold text-white/70">{s.progress}%</span>
+                  <span className="text-xs font-semibold text-ink/70">{s.progress}%</span>
                 </div>
 
-                <div className="mt-2.5 flex items-center gap-4 text-[11px] text-white/45">
+                <div className="mt-2.5 flex items-center gap-4 text-[11px] text-ink/45">
                   <span className="flex items-center gap-1">
                     <Clock3 size={12} /> {s.hoursStudied}h étudiées
                   </span>
@@ -62,7 +62,7 @@ export function ModuleProgressList() {
                     {s.completedChapters}/{s.totalChapters} chapitres
                   </span>
                   {s.finalGrade !== null && (
-                    <span className="ml-auto font-semibold text-white/70">
+                    <span className="ml-auto font-semibold text-ink/70">
                       {s.finalGrade}/{FINAL_MAX}
                     </span>
                   )}

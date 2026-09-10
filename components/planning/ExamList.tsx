@@ -29,7 +29,7 @@ export function ExamList() {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold text-white/85">
+        <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold text-ink/85">
           <ClipboardList size={16} className="text-brand-400" /> Examens à venir
         </h2>
         <Button size="sm" variant="secondary" onClick={openNew}>
@@ -38,7 +38,7 @@ export function ExamList() {
       </div>
 
       {sorted.length === 0 ? (
-        <Card className="p-6 text-center text-sm text-white/45">Aucun examen planifié.</Card>
+        <Card className="p-6 text-center text-sm text-ink/45">Aucun examen planifié.</Card>
       ) : (
         <div className="flex flex-col gap-2">
           {sorted.map((exam, i) => {
@@ -50,14 +50,14 @@ export function ExamList() {
                 <Card delay={i * 0.03} className="p-3.5">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-white/90">{exam.name}</p>
-                      {exam.module && <p className="truncate text-[11px] text-white/45">{exam.module}</p>}
+                      <p className="truncate text-sm font-semibold text-ink/90">{exam.name}</p>
+                      {exam.module && <p className="truncate text-[11px] text-ink/45">{exam.module}</p>}
                     </div>
                     <Badge color={past ? "#64748b" : soon ? "#fb7185" : "#48a3ff"} className="shrink-0">
                       {past ? "Passé" : d === 0 ? "Aujourd'hui" : `J-${d}`}
                     </Badge>
                   </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/45">
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink/45">
                     <span className="capitalize">{formatDateHuman(exam.date)}</span>
                     {exam.time && (
                       <span className="flex items-center gap-1">

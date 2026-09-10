@@ -30,8 +30,8 @@ export function MaterialsList({ groups }: { groups: MaterialGroup[] }) {
   if (groups.length === 0) {
     return (
       <Card className="flex flex-col items-center gap-2 p-6 text-center">
-        <FolderOpen size={22} className="text-white/30" />
-        <p className="text-sm text-white/50">Aucun document trouvé dans ce dossier.</p>
+        <FolderOpen size={22} className="text-ink/30" />
+        <p className="text-sm text-ink/50">Aucun document trouvé dans ce dossier.</p>
       </Card>
     );
   }
@@ -40,7 +40,7 @@ export function MaterialsList({ groups }: { groups: MaterialGroup[] }) {
     <div className="flex flex-col gap-4">
       {groups.map((group) => (
         <div key={group.category}>
-          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink/40">
             <FolderOpen size={13} /> {group.category}
           </p>
           <div className="flex flex-col gap-2">
@@ -63,10 +63,10 @@ export function MaterialsList({ groups }: { groups: MaterialGroup[] }) {
                       <Icon size={18} style={{ color }} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-white/85">{file.name}</p>
-                      <p className="text-[11px] text-white/40">{file.sizeKb} Ko</p>
+                      <p className="truncate text-sm font-medium text-ink/85">{file.name}</p>
+                      <p className="text-[11px] text-ink/40">{file.sizeKb} Ko</p>
                     </div>
-                    <ExternalLink size={15} className="shrink-0 text-white/30" />
+                    <ExternalLink size={15} className="shrink-0 text-ink/30" />
                   </Card>
                 </a>
               );

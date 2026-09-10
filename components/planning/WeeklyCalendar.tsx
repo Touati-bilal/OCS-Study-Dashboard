@@ -48,21 +48,21 @@ export function WeeklyCalendar({ internshipId }: { internshipId: string }) {
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-ink/8 px-4 py-3">
         <button
           onClick={() => setWeekAnchor(addDays(weekStart, -7))}
-          className="rounded-full p-1.5 text-white/50 hover:bg-white/10"
+          className="rounded-full p-1.5 text-ink/50 hover:bg-ink/10"
         >
           <ChevronLeft size={16} />
         </button>
-        <p className="flex items-center gap-1.5 text-xs font-medium text-white/70">
+        <p className="flex items-center gap-1.5 text-xs font-medium text-ink/70">
           <CalendarDays size={13} className="text-brand-400" />
           {days[0].toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} –{" "}
           {days[6].toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
         </p>
         <button
           onClick={() => setWeekAnchor(addDays(weekStart, 7))}
-          className="rounded-full p-1.5 text-white/50 hover:bg-white/10"
+          className="rounded-full p-1.5 text-ink/50 hover:bg-ink/10"
         >
           <ChevronRight size={16} />
         </button>
@@ -70,7 +70,7 @@ export function WeeklyCalendar({ internshipId }: { internshipId: string }) {
 
       <div className="no-scrollbar overflow-x-auto">
         <div style={{ minWidth: 620 }}>
-          <div className="flex border-b border-white/8">
+          <div className="flex border-b border-ink/8">
             <div className="w-10 shrink-0" />
             {days.map((day, i) => {
               const iso = toISODate(day);
@@ -79,17 +79,17 @@ export function WeeklyCalendar({ internshipId }: { internshipId: string }) {
                 <button
                   key={iso}
                   onClick={() => setJournalDate(iso)}
-                  className="flex flex-1 flex-col items-center gap-0.5 border-l border-white/5 py-2 hover:bg-white/[0.03]"
+                  className="flex flex-1 flex-col items-center gap-0.5 border-l border-ink/5 py-2 hover:bg-ink/[0.03]"
                 >
-                  <span className="text-[10px] text-white/40">{DAY_LABELS[i]}</span>
+                  <span className="text-[10px] text-ink/40">{DAY_LABELS[i]}</span>
                   <span
                     className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${
-                      isToday ? "bg-brand-500 text-white" : "text-white/70"
+                      isToday ? "bg-brand-500 text-white" : "text-ink/70"
                     }`}
                   >
                     {day.getDate()}
                   </span>
-                  <NotebookPen size={10} className="text-white/25" />
+                  <NotebookPen size={10} className="text-ink/25" />
                 </button>
               );
             })}
@@ -98,8 +98,8 @@ export function WeeklyCalendar({ internshipId }: { internshipId: string }) {
           <div className="relative flex max-h-[380px] overflow-y-auto" style={{ height: totalHeight }}>
             <div className="w-10 shrink-0">
               {hours.map((h) => (
-                <div key={h} style={{ height: ROW_HEIGHT }} className="border-b border-white/5 pr-1.5 text-right">
-                  <span className="text-[9px] text-white/30">{h}:00</span>
+                <div key={h} style={{ height: ROW_HEIGHT }} className="border-b border-ink/5 pr-1.5 text-right">
+                  <span className="text-[9px] text-ink/30">{h}:00</span>
                 </div>
               ))}
             </div>
@@ -110,11 +110,11 @@ export function WeeklyCalendar({ internshipId }: { internshipId: string }) {
               return (
                 <div
                   key={iso}
-                  className="relative flex-1 border-l border-white/5"
+                  className="relative flex-1 border-l border-ink/5"
                   onClick={() => setEventSheet({ open: true, date: iso, editing: null })}
                 >
                   {hours.map((h) => (
-                    <div key={h} style={{ height: ROW_HEIGHT }} className="border-b border-white/5" />
+                    <div key={h} style={{ height: ROW_HEIGHT }} className="border-b border-ink/5" />
                   ))}
                   {dayEvents.map((event) => {
                     const startMin = timeToMinutes(event.startTime) - RANGE_START * 60;

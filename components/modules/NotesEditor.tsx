@@ -34,7 +34,7 @@ export function NotesEditor({ moduleId }: { moduleId: string }) {
   return (
     <div className="flex flex-col gap-4">
       <Card className="p-4">
-        <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-white/85">
+        <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-ink/85">
           <NotebookPen size={16} className="text-brand-400" /> Nouvelle note
         </h3>
         <Textarea
@@ -55,7 +55,7 @@ export function NotesEditor({ moduleId }: { moduleId: string }) {
       </Card>
 
       {sorted.length === 0 ? (
-        <Card hover={false} className="p-4 text-center text-xs text-white/40">
+        <Card hover={false} className="p-4 text-center text-xs text-ink/40">
           Aucune note pour ce module.
         </Card>
       ) : (
@@ -63,15 +63,15 @@ export function NotesEditor({ moduleId }: { moduleId: string }) {
           {sorted.map((note, i) => (
             <Card key={note.id} delay={i * 0.03} className="p-3.5">
               <div className="flex items-start justify-between gap-2">
-                <p className="whitespace-pre-wrap text-sm text-white/85">{note.text}</p>
+                <p className="whitespace-pre-wrap text-sm text-ink/85">{note.text}</p>
                 <button
                   onClick={() => deleteNote(note.id)}
-                  className="shrink-0 rounded-full p-1.5 text-white/30 hover:bg-rose-500/10 hover:text-rose-400"
+                  className="shrink-0 rounded-full p-1.5 text-ink/30 hover:bg-rose-500/10 hover:text-rose-400"
                 >
                   <Trash2 size={14} />
                 </button>
               </div>
-              <p className="mt-2 text-[11px] text-white/40">{formatNoteDate(note.createdAt)}</p>
+              <p className="mt-2 text-[11px] text-ink/40">{formatNoteDate(note.createdAt)}</p>
             </Card>
           ))}
         </div>

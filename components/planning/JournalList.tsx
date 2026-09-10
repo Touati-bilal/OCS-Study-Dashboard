@@ -17,7 +17,7 @@ export function JournalList() {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold text-white/85">
+        <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold text-ink/85">
           <BookMarked size={16} className="text-brand-400" /> Journal quotidien
         </h2>
         <Button size="sm" variant="secondary" onClick={() => setActiveDate(todayISO())}>
@@ -26,7 +26,7 @@ export function JournalList() {
       </div>
 
       {sorted.length === 0 ? (
-        <Card className="p-6 text-center text-sm text-white/45">
+        <Card className="p-6 text-center text-sm text-ink/45">
           Aucune entrée de journal. Clique sur un jour du calendrier ou sur &quot;Aujourd&apos;hui&quot;.
         </Card>
       ) : (
@@ -35,14 +35,14 @@ export function JournalList() {
             <button key={entry.id} onClick={() => setActiveDate(entry.date)} className="block w-full text-left">
               <Card delay={i * 0.03} className="flex items-center gap-3 p-3.5">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-semibold capitalize text-white/85">
+                  <p className="truncate text-xs font-semibold capitalize text-ink/85">
                     {formatDateHuman(entry.date)}
                   </p>
-                  <p className="mt-0.5 line-clamp-1 text-[11px] text-white/45">
+                  <p className="mt-0.5 line-clamp-1 text-[11px] text-ink/45">
                     {entry.learned || entry.workedOn || "Entrée enregistrée"}
                   </p>
                 </div>
-                <ChevronRight size={16} className="shrink-0 text-white/30" />
+                <ChevronRight size={16} className="shrink-0 text-ink/30" />
               </Card>
             </button>
           ))}

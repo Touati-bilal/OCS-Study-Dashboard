@@ -7,7 +7,7 @@ export function ProgressRing({
   size = 84,
   strokeWidth = 8,
   color = "#48a3ff",
-  trackColor = "rgba(255,255,255,0.08)",
+  trackColor,
   label,
   sublabel,
 }: {
@@ -27,7 +27,16 @@ export function ProgressRing({
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={trackColor} strokeWidth={strokeWidth} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={trackColor ?? "currentColor"}
+          strokeOpacity={trackColor ? 1 : 0.08}
+          className="text-ink"
+          strokeWidth={strokeWidth}
+        />
         <motion.circle
           cx={size / 2}
           cy={size / 2}
@@ -45,10 +54,10 @@ export function ProgressRing({
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="font-display text-lg font-semibold leading-none">{Math.round(clamped)}%</span>
-        {label ? <span className="mt-1 text-[10px] text-white/50 leading-none">{label}</span> : null}
+        {label ? <span className="mt-1 text-[10px] text-ink/50 leading-none">{label}</span> : null}
       </div>
       {sublabel ? (
-        <span className="absolute -bottom-5 text-[10px] text-white/40 whitespace-nowrap">{sublabel}</span>
+        <span className="absolute -bottom-5 text-[10px] text-ink/40 whitespace-nowrap">{sublabel}</span>
       ) : null}
     </div>
   );

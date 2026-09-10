@@ -32,7 +32,7 @@ export default function PlanningHubPage() {
             {currentInternship ? (
               <WeeklyCalendar internshipId={currentInternship.id} />
             ) : (
-              <p className="text-center text-xs text-white/35">
+              <p className="text-center text-xs text-ink/35">
                 Crée un stage pour activer le calendrier hebdomadaire.
               </p>
             )}

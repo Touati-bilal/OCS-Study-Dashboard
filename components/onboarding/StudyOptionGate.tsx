@@ -71,7 +71,7 @@ export function StudyOptionGate({ children }: { children: React.ReactNode }) {
 
 function ScreenFrame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex h-[100dvh] w-full items-center justify-center overflow-y-auto bg-base-950 px-5 py-10 md:h-screen">
+    <div className="relative flex h-[100dvh] w-full items-center justify-center overflow-y-auto bg-paper px-5 py-10 md:h-screen">
       <div className="pointer-events-none fixed inset-0 bg-grid-glow" />
       <div className="relative z-10 w-full max-w-md">{children}</div>
     </div>
@@ -88,11 +88,11 @@ function SelectScreen({ onSelect }: { onSelect: (code: StudyOption) => void }) {
         className="glass rounded-3xl p-6 shadow-card md:p-8"
       >
         <div className="flex flex-col items-center text-center">
-          <div className="relative h-14 w-14 overflow-hidden rounded-2xl bg-black ring-1 ring-white/15 shadow-glow">
+          <div className="relative h-14 w-14 overflow-hidden rounded-2xl bg-black ring-1 ring-ink/15 shadow-glow">
             <Image src="/logo.jpg" alt="Logo" fill sizes="56px" className="object-cover" priority />
           </div>
-          <h1 className="mt-4 font-display text-xl font-bold text-white">Choisis ta filière</h1>
-          <p className="mt-1.5 text-sm text-white/55">
+          <h1 className="mt-4 font-display text-xl font-bold text-ink">Choisis ta filière</h1>
+          <p className="mt-1.5 text-sm text-ink/55">
             Le tableau de bord s&apos;adapte à ta filière d&apos;études.
           </p>
         </div>
@@ -107,7 +107,7 @@ function SelectScreen({ onSelect }: { onSelect: (code: StudyOption) => void }) {
               whileTap={{ scale: 0.98 }}
               whileHover={{ y: -2 }}
               onClick={() => onSelect(opt.code)}
-              className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left transition-colors hover:bg-white/[0.08]"
+              className="group flex items-center gap-4 rounded-2xl border border-ink/10 bg-ink/[0.04] p-4 text-left transition-colors hover:bg-ink/[0.08]"
               style={{ boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.02)` }}
             >
               <div
@@ -117,10 +117,10 @@ function SelectScreen({ onSelect }: { onSelect: (code: StudyOption) => void }) {
                 {opt.code}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-display text-sm font-semibold text-white">
+                <p className="font-display text-sm font-semibold text-ink">
                   {opt.code} — {opt.title}
                 </p>
-                <p className="mt-0.5 truncate text-xs text-white/50">{opt.description}</p>
+                <p className="mt-0.5 truncate text-xs text-ink/50">{opt.description}</p>
               </div>
               <div
                 className={cn(
@@ -146,10 +146,10 @@ function WelcomeScreen({ onContinue }: { onContinue: () => void }) {
           transition={{ duration: 0.45, ease: "easeOut" }}
           className="glass flex flex-col items-center rounded-3xl p-6 text-center shadow-card md:p-8"
         >
-          <div className="relative h-14 w-14 overflow-hidden rounded-2xl bg-black ring-1 ring-white/15 shadow-glow">
+          <div className="relative h-14 w-14 overflow-hidden rounded-2xl bg-black ring-1 ring-ink/15 shadow-glow">
             <Image src="/logo.jpg" alt="Logo" fill sizes="56px" className="object-cover" priority />
           </div>
-          <p className="mt-5 text-balance text-base leading-relaxed text-white/90">{WELCOME_MESSAGE}</p>
+          <p className="mt-5 text-balance text-base leading-relaxed text-ink/90">{WELCOME_MESSAGE}</p>
           <motion.button
             whileTap={{ scale: 0.96 }}
             whileHover={{ scale: 1.02 }}

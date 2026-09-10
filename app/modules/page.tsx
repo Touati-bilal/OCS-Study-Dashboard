@@ -16,7 +16,7 @@ export default function MainModulesPage() {
       <div className="pt-4">
         <CategorySummary modules={modules} color="#48a3ff" />
         {modules.length === 0 ? (
-          <p className="px-5 py-6 text-center text-sm text-white/40 md:px-8 lg:px-10">
+          <p className="px-5 py-6 text-center text-sm text-ink/40 md:px-8 lg:px-10">
             Aucun module pratique pour cette filière pour le moment.
           </p>
         ) : (

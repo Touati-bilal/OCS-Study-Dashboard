@@ -32,12 +32,23 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#05070d",
 };
+
+const THEME_INIT_SCRIPT = `
+try {
+  var raw = window.localStorage.getItem("ocs-study-dashboard");
+  var theme = raw ? JSON.parse(raw).state.theme : "black";
+  document.documentElement.setAttribute("data-theme", theme === "white" ? "white" : "black");
+} catch (e) {}
+`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" className={`${inter.variable} ${outfit.variable}`}>
+      <head>
+        <meta name="theme-color" content="#000000" />
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="font-sans antialiased">
         <AppShell>{children}</AppShell>
       </body>

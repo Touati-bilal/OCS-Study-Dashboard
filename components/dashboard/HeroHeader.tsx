@@ -30,7 +30,7 @@ export function HeroHeader() {
           <motion.p
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-xs font-medium capitalize text-white/45"
+            className="text-xs font-medium capitalize text-ink/45"
           >
             {dateStr}
           </motion.p>
@@ -46,7 +46,7 @@ export function HeroHeader() {
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mt-0.5 text-sm text-white/55"
+            className="mt-0.5 text-sm text-ink/55"
           >
             Voici l&apos;état de ta formation
           </motion.p>
@@ -54,7 +54,7 @@ export function HeroHeader() {
         <motion.div
           initial={{ opacity: 0, scale: 0.85, rotate: -8 }}
           animate={{ opacity: 1, scale: 1, rotate: 0 }}
-          className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-black ring-1 ring-white/15 shadow-glow"
+          className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-black ring-1 ring-ink/15 shadow-glow"
         >
           <Image src="/logo.jpg" alt="Logo" fill sizes="56px" className="object-cover" priority />
         </motion.div>

@@ -6,18 +6,21 @@ import { Button } from "@/components/ui/Button";
 import { FieldGroup, Input, Label, Select, Textarea } from "@/components/ui/Field";
 import { useAppStore } from "@/store/useAppStore";
 import { getModulesForOption } from "@/lib/modules";
-import type { Task } from "@/lib/types";
+import { todayISO } from "@/lib/utils";
+import type { Task, TaskPriority, TaskStatus } from "@/lib/types";
 
 export function TaskFormSheet({
   open,
   onClose,
   editingTask,
   defaultModuleId,
+  defaultDate,
 }: {
   open: boolean;
   onClose: () => void;
   editingTask?: Task | null;
   defaultModuleId?: string | null;
+  defaultDate?: string;
 }) {
   const addTask = useAppStore((s) => s.addTask);
   const updateTask = useAppStore((s) => s.updateTask);
@@ -28,32 +31,40 @@ export function TaskFormSheet({
   const [description, setDescription] = useState("");
   const [moduleId, setModuleId] = useState<string>("");
   const [deadline, setDeadline] = useState("");
+  const [priority, setPriority] = useState<TaskPriority>("medium");
+  const [status, setStatus] = useState<TaskStatus>("todo");
 
   useEffect(() => {
     if (open) {
       setTitle(editingTask?.title ?? "");
       setDescription(editingTask?.description ?? "");
       setModuleId(editingTask?.moduleId ?? defaultModuleId ?? "");
-      setDeadline(editingTask?.deadline ?? "");
+      setDeadline(editingTask?.deadline ?? defaultDate ?? todayISO());
+      setPriority(editingTask?.priority ?? "medium");
+      setStatus(editingTask?.status ?? "todo");
     }
-  }, [open, editingTask, defaultModuleId]);
+  }, [open, editingTask, defaultModuleId, defaultDate]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim() || !deadline) return;
     if (editingTask) {
       updateTask(editingTask.id, {
         title: title.trim(),
         description: description.trim() || undefined,
         moduleId: moduleId || null,
-        deadline: deadline || null,
+        deadline,
+        priority,
+        status,
       });
     } else {
       addTask({
         title: title.trim(),
         description: description.trim() || undefined,
         moduleId: moduleId || null,
-        deadline: deadline || null,
+        deadline,
+        priority,
+        status,
       });
     }
     onClose();
@@ -82,7 +93,29 @@ export function TaskFormSheet({
           />
         </FieldGroup>
         <FieldGroup>
-          <Label>Module / catégorie</Label>
+          <Label>Date</Label>
+          <Input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} required />
+        </FieldGroup>
+        <div className="grid grid-cols-2 gap-3">
+          <FieldGroup>
+            <Label>Priorité</Label>
+            <Select value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)}>
+              <option value="low">Basse</option>
+              <option value="medium">Moyenne</option>
+              <option value="high">Haute</option>
+            </Select>
+          </FieldGroup>
+          <FieldGroup>
+            <Label>Statut</Label>
+            <Select value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)}>
+              <option value="todo">À faire</option>
+              <option value="in_progress">En cours</option>
+              <option value="completed">Terminé</option>
+            </Select>
+          </FieldGroup>
+        </div>
+        <FieldGroup>
+          <Label>Module / catégorie (optionnel)</Label>
           <Select value={moduleId} onChange={(e) => setModuleId(e.target.value)}>
             <option value="">Aucun module</option>
             {availableModules.map((m) => (
@@ -91,10 +124,6 @@ export function TaskFormSheet({
               </option>
             ))}
           </Select>
-        </FieldGroup>
-        <FieldGroup>
-          <Label>Échéance (optionnel)</Label>
-          <Input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
         </FieldGroup>
         <Button type="submit" className="mt-1 w-full">
           {editingTask ? "Enregistrer" : "Ajouter la tâche"}

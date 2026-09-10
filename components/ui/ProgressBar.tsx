@@ -19,7 +19,7 @@ export function ProgressBar({
   const clamped = Math.max(0, Math.min(100, value));
   return (
     <div
-      className={cn("w-full overflow-hidden rounded-full bg-white/[0.06]", className)}
+      className={cn("w-full overflow-hidden rounded-full bg-ink/[0.06]", className)}
       style={{ height }}
     >
       <motion.div

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { LayoutDashboard, ShieldCheck, Layers, CalendarClock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_ITEMS = [
   { href: "/", label: "Accueil", icon: LayoutDashboard },
@@ -18,14 +19,14 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="relative z-10 hidden w-60 shrink-0 flex-col border-r border-white/8 bg-base-900/50 lg:w-64 md:flex">
+    <aside className="relative z-10 hidden w-60 shrink-0 flex-col border-r border-ink/8 bg-paper lg:w-64 md:flex">
       <div className="flex items-center gap-3 px-5 py-6 lg:px-6">
-        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-black ring-1 ring-white/15 shadow-glow">
+        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-black ring-1 ring-ink/15 shadow-glow">
           <Image src="/logo.jpg" alt="Logo" fill sizes="40px" className="object-cover" priority />
         </div>
         <div className="min-w-0">
-          <p className="truncate font-display text-sm font-bold leading-tight text-white">OCS Study</p>
-          <p className="truncate text-[11px] leading-tight text-white/40">Dashboard</p>
+          <p className="truncate font-display text-sm font-bold leading-tight text-ink">OCS Study</p>
+          <p className="truncate text-[11px] leading-tight text-ink/40">Dashboard</p>
         </div>
       </div>
 
@@ -48,10 +49,10 @@ export function Sidebar() {
               )}
               <Icon
                 size={19}
-                className={cn("relative z-10 shrink-0 transition-colors", active ? "text-brand-400" : "text-white/45")}
+                className={cn("relative z-10 shrink-0 transition-colors", active ? "text-brand-400" : "text-ink/45")}
                 strokeWidth={active ? 2.3 : 1.9}
               />
-              <span className={cn("relative z-10 truncate transition-colors", active ? "text-white" : "text-white/55")}>
+              <span className={cn("relative z-10 truncate transition-colors", active ? "text-ink" : "text-ink/55")}>
                 {item.label}
               </span>
             </Link>
@@ -59,7 +60,10 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="px-6 py-5 text-[11px] text-white/25">OCS Study Dashboard</div>
+      <div className="flex items-center justify-between px-6 py-5">
+        <span className="text-[11px] text-ink/25">OCS Study Dashboard</span>
+        <ThemeToggle />
+      </div>
     </aside>
   );
 }

@@ -68,19 +68,19 @@ export function ModuleDetailClient({
                       module.efmRegional && <Badge color="#fbbf24">EFM régional</Badge>
                     )}
                   </div>
-                  <p className="text-xs text-white/50 leading-relaxed">{module.description}</p>
+                  <p className="text-xs text-ink/50 leading-relaxed">{module.description}</p>
                 </div>
               </div>
             </Card>
 
             {module.objectives.length > 0 && (
               <Card className="p-4">
-                <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-white/85">
+                <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-ink/85">
                   <Target size={16} className="text-brand-400" /> Objectifs
                 </h3>
                 <ul className="flex flex-col gap-1.5">
                   {module.objectives.map((obj, i) => (
-                    <li key={i} className="flex gap-2 text-xs text-white/55">
+                    <li key={i} className="flex gap-2 text-xs text-ink/55">
                       <span className="text-brand-400">•</span> {obj}
                     </li>
                   ))}
@@ -90,7 +90,7 @@ export function ModuleDetailClient({
 
             {module.skills && module.skills.length > 0 && (
               <Card className="p-4">
-                <h3 className="mb-2 text-sm font-semibold text-white/85">Compétences</h3>
+                <h3 className="mb-2 text-sm font-semibold text-ink/85">Compétences</h3>
                 <div className="flex flex-wrap gap-1.5">
                   {module.skills.map((skill) => (
                     <Badge key={skill} color={module.color} variant="outline">

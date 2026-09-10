@@ -17,7 +17,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="glass relative z-30 flex shrink-0 items-stretch justify-around border-t border-white/10 px-1 pb-[env(safe-area-inset-bottom)] md:hidden">
+    <nav className="glass relative z-30 flex shrink-0 items-stretch justify-around border-t border-ink/10 px-1 pb-[env(safe-area-inset-bottom)] md:hidden">
       {NAV_ITEMS.map((item) => {
         const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
         const Icon = item.icon;
@@ -36,10 +36,10 @@ export function BottomNav() {
             )}
             <Icon
               size={20}
-              className={cn("relative z-10 transition-colors", active ? "text-brand-400" : "text-white/45")}
+              className={cn("relative z-10 transition-colors", active ? "text-brand-400" : "text-ink/45")}
               strokeWidth={active ? 2.3 : 1.9}
             />
-            <span className={cn("relative z-10 transition-colors", active ? "text-brand-400" : "text-white/45")}>
+            <span className={cn("relative z-10 transition-colors", active ? "text-brand-400" : "text-ink/45")}>
               {item.label}
             </span>
           </Link>

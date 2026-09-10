@@ -45,7 +45,7 @@ export function StatsGrid() {
           <p className="font-display text-lg font-bold leading-none">
             <AnimatedCounter value={item.value} suffix={item.suffix} />
           </p>
-          <p className="text-center text-[10px] leading-tight text-white/40">{item.label}</p>
+          <p className="text-center text-[10px] leading-tight text-ink/40">{item.label}</p>
         </Card>
       ))}
     </div>

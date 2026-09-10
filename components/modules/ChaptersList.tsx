@@ -38,18 +38,18 @@ export function ChaptersList({ moduleId, chapters }: { moduleId: string; chapter
     <div className="flex flex-col gap-2">
       {isFilterable && (
         <div className="relative mb-1">
-          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Rechercher un chapitre ou une section..."
-            className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 pl-9 pr-3 text-sm text-white/85 placeholder:text-white/30 focus:border-white/25 focus:outline-none"
+            className="w-full rounded-xl border border-ink/10 bg-ink/[0.03] py-2.5 pl-9 pr-3 text-sm text-ink/85 placeholder:text-ink/30 focus:border-ink/25 focus:outline-none"
           />
         </div>
       )}
       {isFilterable && filteredChapters.length === 0 && (
-        <Card hover={false} className="p-4 text-center text-xs text-white/40">
+        <Card hover={false} className="p-4 text-center text-xs text-ink/40">
           Aucun chapitre ne correspond à « {query} ».
         </Card>
       )}
@@ -69,7 +69,7 @@ export function ChaptersList({ moduleId, chapters }: { moduleId: string; chapter
                 <Icon size={22} style={{ color: meta.color }} />
               </button>
               <div className="min-w-0 flex-1">
-                <p className={cn("text-sm font-medium", status === "completed" ? "text-white/50 line-through" : "text-white/85")}>
+                <p className={cn("text-sm font-medium", status === "completed" ? "text-ink/50 line-through" : "text-ink/85")}>
                   {i + 1}. {chapter.title}
                 </p>
                 <p className="text-[11px]" style={{ color: meta.color }}>
@@ -88,19 +88,19 @@ export function ChaptersList({ moduleId, chapters }: { moduleId: string; chapter
             >
               <Icon size={20} className="shrink-0" style={{ color: meta.color }} />
               <div className="min-w-0 flex-1">
-                <p className={cn("text-sm font-medium", status === "completed" ? "text-white/50 line-through" : "text-white/85")}>
+                <p className={cn("text-sm font-medium", status === "completed" ? "text-ink/50 line-through" : "text-ink/85")}>
                   {i + 1}. {chapter.title}
                 </p>
                 <div className="mt-1.5 flex items-center gap-2">
                   <ProgressBar value={(done / chapter.objectives.length) * 100} color={meta.color} height={5} className="max-w-[110px]" showShimmer={false} />
-                  <span className="text-[10px] text-white/40">
+                  <span className="text-[10px] text-ink/40">
                     {done}/{chapter.objectives.length} objectifs
                   </span>
                 </div>
               </div>
               <ChevronDown
                 size={18}
-                className={cn("shrink-0 text-white/35 transition-transform", isOpen && "rotate-180")}
+                className={cn("shrink-0 text-ink/35 transition-transform", isOpen && "rotate-180")}
               />
             </button>
 
@@ -111,7 +111,7 @@ export function ChaptersList({ moduleId, chapters }: { moduleId: string; chapter
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.25, ease: "easeOut" }}
-                  className="overflow-hidden border-t border-white/8"
+                  className="overflow-hidden border-t border-ink/8"
                 >
                   <div className="flex flex-col gap-1 p-3">
                     {chapter.objectives.map((obj) => {
@@ -120,19 +120,19 @@ export function ChaptersList({ moduleId, chapters }: { moduleId: string; chapter
                         <button
                           key={obj.id}
                           onClick={() => toggleObjective(moduleId, obj.id)}
-                          className="flex items-start gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-white/[0.04]"
+                          className="flex items-start gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-ink/[0.04]"
                         >
                           {objDone ? (
                             <span
                               className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-md"
                               style={{ backgroundColor: meta.color }}
                             >
-                              <Check size={12} className="text-base-950" strokeWidth={3} />
+                              <Check size={12} className="text-black" strokeWidth={3} />
                             </span>
                           ) : (
-                            <Square size={18} className="mt-0.5 shrink-0 text-white/25" />
+                            <Square size={18} className="mt-0.5 shrink-0 text-ink/25" />
                           )}
-                          <span className={cn("text-xs leading-snug", objDone ? "text-white/40 line-through" : "text-white/75")}>
+                          <span className={cn("text-xs leading-snug", objDone ? "text-ink/40 line-through" : "text-ink/75")}>
                             {obj.text}
                           </span>
                         </button>
@@ -159,7 +159,7 @@ export function ChaptersList({ moduleId, chapters }: { moduleId: string; chapter
                             false
                           )
                         }
-                        className="text-[10px] font-medium text-white/35 hover:text-white/55"
+                        className="text-[10px] font-medium text-ink/35 hover:text-ink/55"
                       >
                         Tout décocher
                       </button>

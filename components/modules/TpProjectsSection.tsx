@@ -157,7 +157,7 @@ function UploadGroup({
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">
+        <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink/40">
           <SectionIcon size={13} style={{ color }} /> {title}
         </p>
         <button
@@ -171,7 +171,7 @@ function UploadGroup({
       </div>
 
       {!loading && files.length === 0 && (
-        <Card hover={false} className="p-4 text-center text-xs text-white/40">
+        <Card hover={false} className="p-4 text-center text-xs text-ink/40">
           Aucun fichier {title.toLowerCase()} importé.
         </Card>
       )}
@@ -191,16 +191,16 @@ function UploadGroup({
                   <Icon size={16} style={{ color }} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-white/85">{file.name}</p>
-                  <p className="text-[11px] text-white/40">
+                  <p className="truncate text-sm font-medium text-ink/85">{file.name}</p>
+                  <p className="text-[11px] text-ink/40">
                     {file.sizeKb} Ko · {formatDate(file.uploadedAt)}
                   </p>
                 </div>
-                <ExternalLink size={14} className="shrink-0 text-white/30" />
+                <ExternalLink size={14} className="shrink-0 text-ink/30" />
               </a>
               <button
                 onClick={() => onDelete(file.name)}
-                className="shrink-0 rounded-full p-1.5 text-white/30 hover:bg-rose-500/10 hover:text-rose-400"
+                className="shrink-0 rounded-full p-1.5 text-ink/30 hover:bg-rose-500/10 hover:text-rose-400"
               >
                 <Trash2 size={14} />
               </button>
