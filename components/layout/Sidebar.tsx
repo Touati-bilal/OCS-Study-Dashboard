@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { LayoutDashboard, ShieldCheck, Layers, CalendarClock, LifeBuoy, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HELP_URL } from "@/lib/help";
+import { APP_NAME, APP_VERSION_LABEL } from "@/lib/app-info";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_ITEMS = [
@@ -79,7 +80,10 @@ export function Sidebar() {
       </nav>
 
       <div className="flex items-center justify-between px-6 py-5">
-        <span className="text-[11px] text-ink/25">OCS Study Dashboard</span>
+        <div className="min-w-0">
+          <p className="truncate text-[11px] leading-tight text-ink/25">{APP_NAME}</p>
+          <p className="truncate text-[11px] leading-tight text-ink/25">{APP_VERSION_LABEL}</p>
+        </div>
         <ThemeToggle />
       </div>
     </aside>

@@ -55,6 +55,30 @@ OCS Study Dashboard
 
 This project is part of my personal learning and development work. It combines web development with the practical organization of academic study resources.
 
+## Versioning
+
+The application version follows a permanent custom format:
+
+```text
+V<MAJOR>.<MONTH>-<UPDATE>
+```
+
+| Component  | Meaning                                                                     |
+| ---------- | --------------------------------------------------------------------------- |
+| `MAJOR`    | Project phase/generation (`V1`, `V2`, ...). Only changed on explicit decision. |
+| `MONTH`    | Two digits, `01`-`12` (`01` = January ... `12` = December).                   |
+| `UPDATE`   | Two digits, `01`-`10`, the update counter within that month.                 |
+
+Examples: `V1.09-01`, `V1.09-02`, ... `V1.09-10`, then `V1.10-01` when October starts, then `V2.01-01` when a new major phase begins.
+
+Rules:
+
+- The version is stored in a single place: `APP_VERSION` in `lib/app-info.ts`, and displayed in the app footer.
+- For each new update: keep `MAJOR`, use the current month, and increment `UPDATE` (reset to `01` when the month changes).
+- `MAJOR` is never incremented automatically. A new major phase is only started on explicit request.
+- Never convert to Semantic Versioning, never use a date as the version, never duplicate the version string elsewhere.
+- Every update adds a matching entry to [`CHANGELOG.md`](./CHANGELOG.md).
+
 ## Status
 
 **Active project**

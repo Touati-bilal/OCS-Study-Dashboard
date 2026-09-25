@@ -1,24 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
+import type { ActivityGroup } from "@/lib/activities.server";
 import { FileText, FileType2, FileSpreadsheet, File, ExternalLink, Download, FolderOpen, Clock3 } from "lucide-react";
-
-interface ActivityFile {
-  fileName: string;
-  part: string;
-  number: number | null;
-  title: string;
-  version: string | null;
-  ext: string;
-  sizeKb: number;
-  url: string;
-}
-
-interface ActivityGroup {
-  part: string;
-  files: ActivityFile[];
-}
 
 const EXT_ICON: Record<string, React.ElementType> = {
   ".pdf": FileText,
@@ -40,45 +24,7 @@ const EXT_COLOR: Record<string, string> = {
   ".txt": "#94a3b8",
 };
 
-export function ActivitiesSection({ moduleId, color }: { moduleId: string; color: string }) {
-  const [groups, setGroups] = useState<ActivityGroup[] | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  const refresh = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/activities?moduleId=${encodeURIComponent(moduleId)}`);
-      if (!res.ok) {
-        setFailed(true);
-        return;
-      }
-      const data = await res.json();
-      setGroups(data.groups ?? []);
-    } catch {
-      setFailed(true);
-    }
-  }, [moduleId]);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  if (groups === null) {
-    if (failed) {
-      return (
-        <Card hover={false} className="p-4 text-center text-xs text-ink/40">
-          Impossible de charger les activités pour le moment.
-        </Card>
-      );
-    }
-    return (
-      <div className="flex flex-col gap-2">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="h-[62px] animate-pulse rounded-2xl bg-ink/[0.05]" />
-        ))}
-      </div>
-    );
-  }
-
+export function ActivitiesSection({ groups, color }: { groups: ActivityGroup[]; color: string }) {
   if (groups.length === 0) {
     return (
       <Card hover={false} className="flex flex-col items-center gap-2 p-8 text-center">
@@ -132,7 +78,7 @@ export function ActivitiesSection({ moduleId, color }: { moduleId: string; color
                       </p>
                     </div>
                     <a
-                      href={`${file.url}?download=1`}
+                      href={file.url}
                       download={file.fileName}
                       title="Télécharger"
                       className="shrink-0 rounded-full p-1.5 text-ink/30 hover:bg-ink/10 hover:text-ink/70"

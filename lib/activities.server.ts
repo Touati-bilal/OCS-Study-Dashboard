@@ -17,6 +17,16 @@ export interface ActivityGroup {
   files: ActivityFile[];
 }
 
+/**
+ * Activities root: one folder per module id (e.g. `public/activities/M201`), which lives under
+ * `public/` so Next.js serves the PDFs as static assets directly (no custom API route or
+ * server-side file reading at request time — this works identically in dev and in any
+ * production/serverless deployment, since `public/` is always shipped in full). The listing is
+ * read once at build time from the server component, exactly like the course materials
+ * (see materials.server.ts).
+ */
+export const ACTIVITIES_ROOT = path.join(process.cwd(), "public", "activities");
+
 const ALLOWED_EXT = new Set([".pdf", ".docx", ".doc", ".pptx", ".ppt", ".xlsx", ".txt"]);
 const PART_LABEL: Record<string, string> = {
   activites: "Autres activités",
@@ -24,11 +34,21 @@ const PART_LABEL: Record<string, string> = {
 };
 
 export function moduleActivitiesDir(moduleId: string): string {
-  return path.join(process.cwd(), `${moduleId}-Active`);
+  return path.join(ACTIVITIES_ROOT, moduleId);
 }
 
 export function hasModuleActivities(moduleId: string): boolean {
   return fs.existsSync(moduleActivitiesDir(moduleId));
+}
+
+/**
+ * Next.js indexes the files of `public/` with `encodeURI(...)` and looks them up with that same
+ * key, so a URL has to be encoded the same way: `encodeURIComponent` over-encodes the characters
+ * `encodeURI` keeps literal (`+ ( ) & = , ; : @ ! ~ * '`) and those files would 404.
+ * `?` and `#` are escaped too since they would otherwise truncate the URL.
+ */
+function encodeAssetPath(segment: string): string {
+  return encodeURI(segment).replace(/[?#]/g, (char) => encodeURIComponent(char));
 }
 
 function parseActivityName(fileName: string): Omit<ActivityFile, "ext" | "sizeKb" | "url" | "fileName"> {
@@ -83,7 +103,7 @@ export function getModuleActivities(moduleId: string): ActivityFile[] {
         ...parseActivityName(entry.name),
         ext,
         sizeKb: Math.max(1, Math.round(stat.size / 1024)),
-        url: `/api/activities/file/${[moduleId, entry.name].map(encodeURIComponent).join("/")}`,
+        url: "/activities/" + [moduleId, entry.name].map(encodeAssetPath).join("/"),
       };
     })
     .filter((file) => ALLOWED_EXT.has(file.ext))
@@ -97,12 +117,4 @@ export function getModuleActivityGroups(moduleId: string): ActivityGroup[] {
     map.get(file.part)!.push(file);
   }
   return Array.from(map.entries()).map(([part, files]) => ({ part: PART_LABEL[part] ?? part, files }));
-}
-
-export function resolveActivityPath(moduleId: string, fileName: string): string | null {
-  const root = path.resolve(moduleActivitiesDir(moduleId));
-  const target = path.resolve(path.join(root, path.basename(fileName)));
-  if (target !== root && !target.startsWith(root + path.sep)) return null;
-  if (!fs.existsSync(target) || !fs.statSync(target).isFile()) return null;
-  return target;
 }

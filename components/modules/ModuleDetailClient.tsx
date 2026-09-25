@@ -20,6 +20,7 @@ import { useModuleStats } from "@/hooks/useModuleStats";
 import { isOccOrsModule, type ModuleDef } from "@/lib/modules";
 import { isOcsMainModule } from "@/lib/quizzes";
 import type { MaterialGroup } from "@/lib/materials.server";
+import type { ActivityGroup } from "@/lib/activities.server";
 import { Target } from "lucide-react";
 
 const BASE_TABS = [
@@ -41,10 +42,12 @@ const OCS_TABS = [
 export function ModuleDetailClient({
   module,
   materialGroups,
+  activityGroups,
   backHref,
 }: {
   module: ModuleDef;
   materialGroups: MaterialGroup[];
+  activityGroups: ActivityGroup[];
   backHref: string;
 }) {
   const [tab, setTab] = useState("apercu");
@@ -129,7 +132,7 @@ export function ModuleDetailClient({
 
         {tab === "documents" && <MaterialsList groups={materialGroups} />}
 
-        {tab === "activites" && isOcs && <ActivitiesSection moduleId={module.id} color={module.color} />}
+        {tab === "activites" && isOcs && <ActivitiesSection groups={activityGroups} color={module.color} />}
 
         {tab === "quiz" && isOcs && <QuizSection moduleId={module.id} color={module.color} />}
 

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getModuleById, ALL_MODULES } from "@/lib/modules";
 import { getModuleMaterialGroups } from "@/lib/materials.server";
+import { getModuleActivityGroups } from "@/lib/activities.server";
 import { ModuleDetailClient } from "@/components/modules/ModuleDetailClient";
 
 export function generateStaticParams() {
@@ -12,7 +13,15 @@ export default function ModuleDetailPage({ params }: { params: { id: string } })
   if (!module) notFound();
 
   const materialGroups = getModuleMaterialGroups(module.folder);
+  const activityGroups = getModuleActivityGroups(module.id);
   const backHref = module.category === "main" ? "/modules" : "/secondary";
 
-  return <ModuleDetailClient module={module} materialGroups={materialGroups} backHref={backHref} />;
+  return (
+    <ModuleDetailClient
+      module={module}
+      materialGroups={materialGroups}
+      activityGroups={activityGroups}
+      backHref={backHref}
+    />
+  );
 }

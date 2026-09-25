@@ -6,6 +6,7 @@ import { BottomNav } from "./BottomNav";
 import { ThemeToggle } from "./ThemeToggle";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useAppStore } from "@/store/useAppStore";
+import { APP_VERSION_LABEL } from "@/lib/app-info";
 import { StudyOptionGate } from "@/components/onboarding/StudyOptionGate";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -34,7 +35,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Sidebar />
 
         <div className="relative z-10 flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-          <div className="flex justify-end px-4 pt-3 md:hidden">
+          <div className="flex items-center justify-between px-4 pt-3 md:hidden">
+            <span className="truncate text-[11px] text-ink/25">{APP_VERSION_LABEL}</span>
             <ThemeToggle />
           </div>
           <div className="no-scrollbar min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">
