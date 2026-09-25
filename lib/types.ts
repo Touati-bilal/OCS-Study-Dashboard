@@ -16,6 +16,14 @@ export interface Note {
   createdAt: string;
 }
 
+export interface QuizResult {
+  correct: number;
+  incorrect: number;
+  total: number;
+  percentage: number;
+  completedAt: string;
+}
+
 export type TaskPriority = "low" | "medium" | "high";
 export type TaskStatus = "todo" | "in_progress" | "completed";
 

@@ -11,11 +11,14 @@ import { HoursCard } from "./HoursCard";
 import { ChaptersList } from "./ChaptersList";
 import { NotesEditor } from "./NotesEditor";
 import { MaterialsList } from "./MaterialsList";
+import { ActivitiesSection } from "./ActivitiesSection";
+import { QuizSection } from "./QuizSection";
 import { TpProjectsSection } from "./TpProjectsSection";
 import { FilesSection } from "./FilesSection";
 import { TodoSection } from "@/components/dashboard/TodoSection";
 import { useModuleStats } from "@/hooks/useModuleStats";
 import { isOccOrsModule, type ModuleDef } from "@/lib/modules";
+import { isOcsMainModule } from "@/lib/quizzes";
 import type { MaterialGroup } from "@/lib/materials.server";
 import { Target } from "lucide-react";
 
@@ -30,6 +33,11 @@ const BASE_TABS = [
 
 const TP_PROJECTS_TAB = { id: "tp-projets", label: "TP & Projects" };
 
+const OCS_TABS = [
+  { id: "activites", label: "Les Activités" },
+  { id: "quiz", label: "Quiz" },
+];
+
 export function ModuleDetailClient({
   module,
   materialGroups,
@@ -41,7 +49,13 @@ export function ModuleDetailClient({
 }) {
   const [tab, setTab] = useState("apercu");
   const [stat] = useModuleStats([module]);
-  const tabs = module.efmRegional ? [...BASE_TABS, TP_PROJECTS_TAB] : BASE_TABS;
+  const isOcs = isOcsMainModule(module);
+  const tabs = [
+    ...BASE_TABS.slice(0, 4),
+    ...(isOcs ? OCS_TABS : []),
+    ...BASE_TABS.slice(4),
+    ...(module.efmRegional ? [TP_PROJECTS_TAB] : []),
+  ];
 
   return (
     <>
@@ -56,6 +70,9 @@ export function ModuleDetailClient({
                 <ProgressRing value={stat?.progress ?? 0} color={module.color} size={80} />
                 <div className="flex-1">
                   <div className="mb-1.5 flex flex-wrap gap-1.5">
+                    {!isOccOrsModule(module.id) && stat?.completed && (
+                      <Badge color="#34d399">Terminé — 100%</Badge>
+                    )}
                     <Badge color={module.color}>{module.duration}h</Badge>
                     <Badge color="#94a3b8" variant="outline">
                       Coef. {module.coefficient}
@@ -111,6 +128,10 @@ export function ModuleDetailClient({
         {tab === "notes" && <NotesEditor moduleId={module.id} />}
 
         {tab === "documents" && <MaterialsList groups={materialGroups} />}
+
+        {tab === "activites" && isOcs && <ActivitiesSection moduleId={module.id} color={module.color} />}
+
+        {tab === "quiz" && isOcs && <QuizSection moduleId={module.id} color={module.color} />}
 
         {tab === "fichiers" && <FilesSection moduleId={module.id} />}
 

@@ -4,13 +4,18 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Badge } from "@/components/ui/Badge";
+import { useAppStore } from "@/store/useAppStore";
 import { useModuleStats } from "@/hooks/useModuleStats";
 import { ChevronRight, Clock3, Sparkles } from "lucide-react";
 import { FINAL_MAX } from "@/lib/grades";
 
 export function ModuleProgressList() {
   const stats = useModuleStats();
+  const studyOption = useAppStore((s) => s.studyOption);
+  const isOcs = studyOption === "OCS";
   const started = stats.filter((s) => s.started);
+  const inProgress = isOcs ? started.filter((s) => !s.completed) : started;
+  const completed = isOcs ? started.filter((s) => s.completed) : [];
 
   return (
     <div className="px-5 pb-4 md:px-8 lg:px-0">
@@ -21,17 +26,21 @@ export function ModuleProgressList() {
         </Link>
       </div>
 
-      {started.length === 0 ? (
+      {inProgress.length === 0 ? (
         <Card className="flex flex-col items-center gap-2 p-6 text-center">
           <Sparkles size={22} className="text-ink/30" />
-          <p className="text-sm text-ink/50">Aucun module entamé pour l&apos;instant.</p>
-          <Link href="/modules" className="text-xs font-medium text-brand-400">
-            Commencer un module →
-          </Link>
+          <p className="text-sm text-ink/50">
+            {completed.length > 0 ? "Aucun module en cours, bravo !" : "Aucun module entamé pour l'instant."}
+          </p>
+          {completed.length === 0 && (
+            <Link href="/modules" className="text-xs font-medium text-brand-400">
+              Commencer un module →
+            </Link>
+          )}
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-          {started.map((s, i) => (
+          {inProgress.map((s, i) => (
             <Link key={s.module.id} href={`/modules/${s.module.id}`}>
               <Card delay={0.05 * i} className="p-4">
                 <div className="flex items-start justify-between gap-2">

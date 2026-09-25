@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { LayoutDashboard, ShieldCheck, Layers, CalendarClock } from "lucide-react";
+import { LayoutDashboard, ShieldCheck, Layers, CalendarClock, LifeBuoy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HELP_URL } from "@/lib/help";
 
 const NAV_ITEMS = [
   { href: "/", label: "Accueil", icon: LayoutDashboard },
@@ -12,6 +13,8 @@ const NAV_ITEMS = [
   { href: "/secondary", label: "EGTS", icon: Layers },
   { href: "/planning", label: "Planning", icon: CalendarClock },
 ];
+
+const HELP_ITEM = { href: HELP_URL, label: "Help", icon: LifeBuoy };
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -45,6 +48,20 @@ export function BottomNav() {
           </Link>
         );
       })}
+
+      <a
+        href={HELP_ITEM.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="relative flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-medium"
+      >
+        <HELP_ITEM.icon
+          size={20}
+          className="relative z-10 text-ink/45"
+          strokeWidth={1.9}
+        />
+        <span className="relative z-10 text-ink/45">Help</span>
+      </a>
     </nav>
   );
 }

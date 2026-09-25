@@ -4,11 +4,13 @@ import { useMemo } from "react";
 import {
   useAppStore,
   computeModuleProgress,
+  computeModuleHoursProgress,
+  isModuleHoursCompleted,
   computeIsModuleStarted,
   countCompletedObjectives,
   countCompletedChapters,
 } from "@/store/useAppStore";
-import { ModuleDef, countObjectives, getModulesForOption } from "@/lib/modules";
+import { ModuleDef, countObjectives, getModulesForOption, isOccOrsModule } from "@/lib/modules";
 import { computeFinalGrade } from "@/lib/grades";
 
 export interface ModuleStat {
@@ -35,14 +37,17 @@ export function useModuleStats(modules?: ModuleDef[]): ModuleStat[] {
     return resolvedModules.map((module) => {
       const runtime = moduleState[module.id];
       const totalObjectives = countObjectives(module);
-      const progress = computeModuleProgress(runtime, totalObjectives);
+      const usesHoursProgress = !isOccOrsModule(module.id);
+      const progress = usesHoursProgress
+        ? computeModuleHoursProgress(runtime, module.duration)
+        : computeModuleProgress(runtime, totalObjectives);
       const started = computeIsModuleStarted(runtime);
       return {
         module,
         progress,
         hoursStudied: runtime?.hoursStudied ?? 0,
         started,
-        completed: progress >= 100,
+        completed: usesHoursProgress ? isModuleHoursCompleted(runtime, module.duration) : progress >= 100,
         ccGrade: runtime?.ccGrade ?? null,
         efmGrade: runtime?.efmGrade ?? null,
         finalGrade: computeFinalGrade(runtime?.ccGrade ?? null, runtime?.efmGrade ?? null),

@@ -4,8 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { LayoutDashboard, ShieldCheck, Layers, CalendarClock } from "lucide-react";
+import { LayoutDashboard, ShieldCheck, Layers, CalendarClock, LifeBuoy, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HELP_URL } from "@/lib/help";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_ITEMS = [
@@ -14,6 +15,8 @@ const NAV_ITEMS = [
   { href: "/secondary", label: "EGTS", icon: Layers },
   { href: "/planning", label: "Planning", icon: CalendarClock },
 ];
+
+const HELP_ITEM = { href: HELP_URL, label: "Help", icon: LifeBuoy, external: true };
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -58,6 +61,21 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        <a
+          href={HELP_ITEM.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative mt-auto flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium"
+        >
+          <LifeBuoy
+            size={19}
+            className="relative z-10 shrink-0 text-ink/45"
+            strokeWidth={1.9}
+          />
+          <span className="relative z-10 truncate text-ink/55">Help</span>
+          <ExternalLink size={13} className="relative z-10 ml-auto shrink-0 text-ink/25" />
+        </a>
       </nav>
 
       <div className="flex items-center justify-between px-6 py-5">

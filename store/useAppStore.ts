@@ -12,6 +12,7 @@ import type {
   JournalEntry,
   ModuleRuntime,
   Note,
+  QuizResult,
   StudyOption,
   Task,
   TaskStatus,
@@ -32,6 +33,7 @@ interface AppState {
   journalEntries: JournalEntry[];
   exams: Exam[];
   notes: Note[];
+  quizResults: Record<string, QuizResult>;
 
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
@@ -47,6 +49,9 @@ interface AppState {
 
   addNote: (moduleId: string, text: string) => void;
   deleteNote: (id: string) => void;
+
+  saveQuizResult: (moduleId: string, result: QuizResult) => void;
+  clearQuizResult: (moduleId: string) => void;
 
   addTask: (task: Omit<Task, "id" | "createdAt" | "status"> & { status?: TaskStatus }) => void;
   updateTask: (id: string, patch: Partial<Task>) => void;
@@ -82,6 +87,7 @@ export const useAppStore = create<AppState>()(
       journalEntries: [],
       exams: [],
       notes: [],
+      quizResults: {},
 
       setTheme: (theme) => set({ theme }),
       toggleTheme: () => set((state) => ({ theme: state.theme === "black" ? "white" : "black" })),
@@ -148,6 +154,16 @@ export const useAppStore = create<AppState>()(
         })),
 
       deleteNote: (id) => set((state) => ({ notes: state.notes.filter((n) => n.id !== id) })),
+
+      saveQuizResult: (moduleId, result) =>
+        set((state) => ({ quizResults: { ...state.quizResults, [moduleId]: result } })),
+
+      clearQuizResult: (moduleId) =>
+        set((state) => {
+          const next = { ...state.quizResults };
+          delete next[moduleId];
+          return { quizResults: next };
+        }),
 
       addTask: (task) =>
         set((state) => ({
@@ -235,11 +251,11 @@ export const useAppStore = create<AppState>()(
     {
       name: "ocs-study-dashboard",
       storage: createJSONStorage(() => (typeof window !== "undefined" ? window.localStorage : (undefined as unknown as Storage))),
-      version: 4,
+      version: 5,
       skipHydration: true,
       migrate: (persistedState) => {
         const state = persistedState as
-          | { modules?: Record<string, any>; internships?: any[]; notes?: Note[]; tasks?: any[]; theme?: Theme }
+          | { modules?: Record<string, any>; internships?: any[]; notes?: Note[]; tasks?: any[]; theme?: Theme; quizResults?: Record<string, QuizResult> }
           | undefined;
         if (state?.tasks) {
           state.tasks = state.tasks.map((t) => ({
@@ -277,6 +293,9 @@ export const useAppStore = create<AppState>()(
         if (state?.internships) {
           state.internships = state.internships.map((i) => ({ effGrade: null, ...i }));
         }
+        if (state && !state.quizResults) {
+          state.quizResults = {};
+        }
         return state as AppState;
       },
     }
@@ -291,6 +310,15 @@ export function countCompletedObjectives(runtime: ModuleRuntime | undefined): nu
 export function computeModuleProgress(runtime: ModuleRuntime | undefined, totalObjectives: number): number {
   if (!runtime || totalObjectives === 0) return 0;
   return Math.round((countCompletedObjectives(runtime) / totalObjectives) * 100);
+}
+
+export function computeModuleHoursProgress(runtime: ModuleRuntime | undefined, totalHours: number): number {
+  if (!runtime || totalHours <= 0) return 0;
+  return Math.min(100, Math.round((runtime.hoursStudied / totalHours) * 100));
+}
+
+export function isModuleHoursCompleted(runtime: ModuleRuntime | undefined, totalHours: number): boolean {
+  return totalHours > 0 && (runtime?.hoursStudied ?? 0) >= totalHours;
 }
 
 export function deriveChapterStatus(chapter: ChapterDef, runtime: ModuleRuntime | undefined): ChapterStatus {
