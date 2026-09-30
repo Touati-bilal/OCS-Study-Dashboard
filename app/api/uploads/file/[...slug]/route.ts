@@ -1,44 +1,44 @@
+/**
+ * `/api/uploads/file/[...slug]` — downloads one stored TP / Projects file.
+ *
+ * Two rules matter here, and both were missing before:
+ *
+ *   1. the route requires the signed-in owner account, so the stored files are not world-readable;
+ *   2. the response is always an *attachment* of type `application/octet-stream`, with
+ *      `X-Content-Type-Options: nosniff` and only allowlisted extensions resolvable at all.
+ *
+ * Together with the write path - which no longer accepts a client-supplied `moduleId` as a path, and
+ * stores files outside `public/` - there is no way to get a browser to execute an uploaded document
+ * as HTML or script on the app's own origin.
+ */
 import { NextRequest, NextResponse } from "next/server";
+
+import { requireOwnerAccess, unauthorizedFiles } from "@/lib/prv/guard.server";
+import { resolveUploadFileForDownload } from "@/lib/uploads.server";
 import fs from "fs";
-import path from "path";
-import { UPLOADS_ROOT } from "@/lib/uploads.server";
 
-const MIME: Record<string, string> = {
-  ".pdf": "application/pdf",
-  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  ".doc": "application/msword",
-  ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-  ".ppt": "application/vnd.ms-powerpoint",
-  ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  ".zip": "application/zip",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".txt": "text/plain; charset=utf-8",
-  ".md": "text/markdown; charset=utf-8",
-};
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-export async function GET(_req: NextRequest, { params }: { params: { slug: string[] } }) {
-  const resolvedRoot = path.resolve(UPLOADS_ROOT);
-  const targetPath = path.join(resolvedRoot, ...params.slug);
-  const resolvedTarget = path.resolve(targetPath);
+export async function GET(req: NextRequest, { params }: { params: { slug: string[] } }) {
+  if (!(await requireOwnerAccess(req))) return unauthorizedFiles();
 
-  if (!resolvedTarget.startsWith(resolvedRoot)) {
-    return new NextResponse("Forbidden", { status: 403 });
-  }
-  if (!fs.existsSync(resolvedTarget) || !fs.statSync(resolvedTarget).isFile()) {
-    return new NextResponse("Fichier introuvable", { status: 404 });
+  let resolved: { fullPath: string; name: string };
+  try {
+    resolved = resolveUploadFileForDownload(params.slug ?? []);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Fichier introuvable";
+    const notFound = message === "fichier introuvable";
+    return new NextResponse(notFound ? "Fichier introuvable" : "Forbidden", { status: notFound ? 404 : 403 });
   }
 
-  const ext = path.extname(resolvedTarget).toLowerCase();
-  const mime = MIME[ext] || "application/octet-stream";
-  const fileBuffer = fs.readFileSync(resolvedTarget);
-  const filename = path.basename(resolvedTarget);
-
+  const fileBuffer = fs.readFileSync(resolved.fullPath);
   return new NextResponse(fileBuffer, {
     headers: {
-      "Content-Type": mime,
-      "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(filename)}`,
+      "Content-Type": "application/octet-stream",
+      "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(resolved.name)}`,
+      "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "default-src 'none'; sandbox",
       "Cache-Control": "no-store",
     },
   });

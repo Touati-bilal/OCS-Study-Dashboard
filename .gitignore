@@ -9,3 +9,14 @@ node_modules/
 out/
 .env
 .env.local
+.env.*.local
+
+# PRV private data: access-code counters, generated reports/PDFs, push subscriptions.
+# Never committed - this is private study data and server-side secrets.
+/.prv-data/
+
+# The owner's own uploads (TP, projects, "Les Fichiers") live on the server under uploads/ and are
+# personal documents, not application code. Six of them - including a screenshot and a TODO - were
+# committed by accident before this entry existed. They are untracked now; the files themselves are
+# untouched, and the app keeps working because it reads them from disk.
+uploads/

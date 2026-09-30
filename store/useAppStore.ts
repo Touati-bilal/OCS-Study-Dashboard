@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { ALL_MODULES, ChapterDef } from "@/lib/modules";
+import { quizKey } from "@/lib/quizzes";
 import { uid, todayISO } from "@/lib/utils";
 import type {
   ChapterStatus,
@@ -15,12 +16,28 @@ import type {
   QuizResult,
   StudyOption,
   Task,
+  TaskPriority,
   TaskStatus,
   Theme,
 } from "@/lib/types";
 
 function emptyModuleRuntime(): ModuleRuntime {
   return { hoursStudied: 0, ccGrade: null, efmGrade: null, objectiveStatus: {} };
+}
+
+/**
+ * Priorities used before V1.09-02 were a magnitude (low / medium / high) and are mapped onto
+ * the new reason-based scale. No task is dropped: only the label changes.
+ */
+const LEGACY_PRIORITY_MAP: Record<string, TaskPriority> = {
+  high: "prof",
+  medium: "important",
+  low: "normal",
+};
+
+export function normalizeTaskPriority(value: unknown): TaskPriority {
+  if (value === "prof" || value === "important" || value === "normal") return value;
+  return LEGACY_PRIORITY_MAP[String(value)] ?? "normal";
 }
 
 interface AppState {
@@ -33,7 +50,10 @@ interface AppState {
   journalEntries: JournalEntry[];
   exams: Exam[];
   notes: Note[];
+  /** Kept as-is: results of the module-level quizzes used before quizzes became chapter-level. */
   quizResults: Record<string, QuizResult>;
+  /** Chapter-level quiz results, keyed by `moduleId:chapterId` (see `quizKey`). */
+  chapterQuizResults: Record<string, QuizResult>;
 
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
@@ -52,12 +72,14 @@ interface AppState {
 
   saveQuizResult: (moduleId: string, result: QuizResult) => void;
   clearQuizResult: (moduleId: string) => void;
+  saveChapterQuizResult: (moduleId: string, chapterId: string, result: QuizResult) => void;
+  clearChapterQuizResult: (moduleId: string, chapterId: string) => void;
 
   addTask: (task: Omit<Task, "id" | "createdAt" | "status"> & { status?: TaskStatus }) => void;
   updateTask: (id: string, patch: Partial<Task>) => void;
   deleteTask: (id: string) => void;
   setTaskStatus: (id: string, status: TaskStatus) => void;
-  moveTask: (id: string, deadline: string) => void;
+  moveTask: (id: string, deadline?: string) => void;
 
   addInternship: (i: Omit<Internship, "id">) => string;
   updateInternship: (id: string, patch: Partial<Internship>) => void;
@@ -88,6 +110,7 @@ export const useAppStore = create<AppState>()(
       exams: [],
       notes: [],
       quizResults: {},
+      chapterQuizResults: {},
 
       setTheme: (theme) => set({ theme }),
       toggleTheme: () => set((state) => ({ theme: state.theme === "black" ? "white" : "black" })),
@@ -165,21 +188,77 @@ export const useAppStore = create<AppState>()(
           return { quizResults: next };
         }),
 
+      saveChapterQuizResult: (moduleId, chapterId, result) =>
+        set((state) => ({
+          chapterQuizResults: { ...state.chapterQuizResults, [quizKey(moduleId, chapterId)]: result },
+        })),
+
+      clearChapterQuizResult: (moduleId, chapterId) =>
+        set((state) => {
+          const next = { ...state.chapterQuizResults };
+          delete next[quizKey(moduleId, chapterId)];
+          return { chapterQuizResults: next };
+        }),
+
       addTask: (task) =>
         set((state) => ({
           tasks: [
-            { ...task, status: task.status ?? "todo", id: uid(), createdAt: new Date().toISOString() },
+            {
+              ...task,
+              // A task with no module is stored as null, never as "": an empty module id would not
+              // match the "no module" branch of the OCS task list filter and the task would be
+              // invisible right after being created.
+              moduleId: task.moduleId || null,
+              priority: normalizeTaskPriority(task.priority),
+              status: task.status ?? "todo",
+              id: uid(),
+              createdAt: new Date().toISOString(),
+              ...(task.status === "completed" ? { completedAt: new Date().toISOString() } : {}),
+            },
             ...state.tasks,
           ],
         })),
 
       updateTask: (id, patch) =>
-        set((state) => ({ tasks: state.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) })),
+        set((state) => ({
+          tasks: state.tasks.map((t) => {
+            if (t.id !== id) return t;
+            const next: Task = {
+              ...t,
+              ...patch,
+              moduleId: (patch.moduleId ?? t.moduleId) || null,
+              priority: normalizeTaskPriority(patch.priority ?? t.priority),
+            };
+            if (patch.completedAt !== undefined) return next;
+            // The form can change the status too, so keep the completion date in sync.
+            if (next.status === "completed") {
+              return { ...next, completedAt: t.completedAt ?? new Date().toISOString() };
+            }
+            if (t.status === "completed") {
+              const { completedAt: _completedAt, ...rest } = next;
+              return rest;
+            }
+            return next;
+          }),
+        })),
 
       deleteTask: (id) => set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) })),
 
+      /** Moving a task to "completed" stamps `completedAt` once; leaving that status clears it. */
       setTaskStatus: (id, status) =>
-        set((state) => ({ tasks: state.tasks.map((t) => (t.id === id ? { ...t, status } : t)) })),
+        set((state) => ({
+          tasks: state.tasks.map((t) => {
+            if (t.id !== id) return t;
+            if (status === "completed") {
+              return { ...t, status, completedAt: t.completedAt ?? new Date().toISOString() };
+            }
+            if (t.status === "completed") {
+              const { completedAt: _completedAt, ...rest } = t;
+              return { ...rest, status };
+            }
+            return { ...t, status };
+          }),
+        })),
 
       moveTask: (id, deadline) =>
         set((state) => ({ tasks: state.tasks.map((t) => (t.id === id ? { ...t, deadline } : t)) })),
@@ -251,19 +330,34 @@ export const useAppStore = create<AppState>()(
     {
       name: "ocs-study-dashboard",
       storage: createJSONStorage(() => (typeof window !== "undefined" ? window.localStorage : (undefined as unknown as Storage))),
-      version: 5,
+      version: 6,
       skipHydration: true,
       migrate: (persistedState) => {
         const state = persistedState as
-          | { modules?: Record<string, any>; internships?: any[]; notes?: Note[]; tasks?: any[]; theme?: Theme; quizResults?: Record<string, QuizResult> }
+          | {
+              modules?: Record<string, any>;
+              internships?: any[];
+              notes?: Note[];
+              tasks?: any[];
+              theme?: Theme;
+              quizResults?: Record<string, QuizResult>;
+              chapterQuizResults?: Record<string, QuizResult>;
+            }
           | undefined;
         if (state?.tasks) {
-          state.tasks = state.tasks.map((t) => ({
-            ...t,
-            deadline: t.deadline ?? todayISO(),
-            priority: t.priority ?? "medium",
-            status: t.status ?? (t.completed ? "completed" : "todo"),
-          }));
+          state.tasks = state.tasks.map((t) => {
+            const status: TaskStatus = t.status ?? (t.completed ? "completed" : "todo");
+            return {
+              ...t,
+              // v5: a deadline was mandatory; it is now an optional due date, so a task without
+              // one is kept as-is instead of being pinned to today.
+              deadline: t.deadline ?? undefined,
+              priority: normalizeTaskPriority(t.priority),
+              status,
+              // v5 had no completion date: stamp it for tasks that were already done.
+              completedAt: status === "completed" ? t.completedAt ?? t.createdAt ?? new Date().toISOString() : undefined,
+            };
+          });
         }
         if (state && !state.theme) {
           state.theme = "black";
@@ -295,6 +389,11 @@ export const useAppStore = create<AppState>()(
         }
         if (state && !state.quizResults) {
           state.quizResults = {};
+        }
+        if (state && !state.chapterQuizResults) {
+          // Module-level results already stored under `quizResults` are intentionally left there
+          // so the pre-V1.09-02 scores stay readable; chapter results start empty.
+          state.chapterQuizResults = {};
         }
         return state as AppState;
       },

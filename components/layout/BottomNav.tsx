@@ -3,25 +3,30 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { LayoutDashboard, ShieldCheck, Layers, CalendarClock, LifeBuoy } from "lucide-react";
+import { LayoutDashboard, ShieldCheck, Layers, CalendarClock, LifeBuoy, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HELP_URL } from "@/lib/help";
+import { useAppStore } from "@/store/useAppStore";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Accueil", icon: LayoutDashboard },
-  { href: "/modules", label: "Modules", icon: ShieldCheck },
-  { href: "/secondary", label: "EGTS", icon: Layers },
-  { href: "/planning", label: "Planning", icon: CalendarClock },
+  { href: "/", label: "Accueil", icon: LayoutDashboard, ocsOnly: false },
+  { href: "/modules", label: "Modules", icon: ShieldCheck, ocsOnly: false },
+  { href: "/secondary", label: "EGTS", icon: Layers, ocsOnly: false },
+  { href: "/planning", label: "Planning", icon: CalendarClock, ocsOnly: false },
+  // OCS-only; the server re-checks the PRV session on every /prv page.
+  { href: "/prv", label: "PRV", icon: Lock, ocsOnly: true },
 ];
 
 const HELP_ITEM = { href: HELP_URL, label: "Help", icon: LifeBuoy };
 
 export function BottomNav() {
   const pathname = usePathname();
+  const studyOption = useAppStore((s) => s.studyOption);
+  const items = NAV_ITEMS.filter((item) => !item.ocsOnly || studyOption === "OCS");
 
   return (
     <nav className="glass relative z-30 flex shrink-0 items-stretch justify-around border-t border-ink/10 px-1 pb-[env(safe-area-inset-bottom)] md:hidden">
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
         const Icon = item.icon;
         return (

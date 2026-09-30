@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/Card";
+import { SignInToManageFiles } from "@/components/modules/SignInToManageFiles";
 import {
   FileText,
   FileType2,
@@ -57,16 +58,30 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-export function FilesSection({ moduleId }: { moduleId: string }) {
+export function FilesSection({
+  moduleId,
+  title = "Les Fichiers",
+  emptyLabel = "Aucun fichier importé pour ce module.",
+}: {
+  moduleId: string;
+  title?: string;
+  emptyLabel?: string;
+}) {
   const [files, setFiles] = useState<ModuleFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<PendingFile[]>([]);
   const [saving, setSaving] = useState(false);
+  // The route requires the signed-in account; say so rather than showing an unexplained empty list.
+  const [authRequired, setAuthRequired] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(async () => {
     const res = await fetch(`/api/module-files?moduleId=${encodeURIComponent(moduleId)}`);
-    if (res.ok) {
+    if (res.status === 401) {
+      setAuthRequired(true);
+      setFiles([]);
+    } else if (res.ok) {
+      setAuthRequired(false);
       const data = await res.json();
       setFiles(data.files ?? []);
     }
@@ -103,7 +118,8 @@ export function FilesSection({ moduleId }: { moduleId: string }) {
       formData.append("moduleId", moduleId);
       formData.append("title", p.title);
       formData.append("file", p.file);
-      await fetch("/api/module-files", { method: "POST", body: formData });
+      const res = await fetch("/api/module-files", { method: "POST", body: formData });
+      if (res.status === 401) setAuthRequired(true);
     }
     setPending([]);
     setSaving(false);
@@ -121,9 +137,10 @@ export function FilesSection({ moduleId }: { moduleId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
+      {authRequired && <SignInToManageFiles />}
       <div className="flex items-center justify-between">
         <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink/40">
-          <FolderOpen size={13} className="text-brand-400" /> Les Fichiers
+          <FolderOpen size={13} className="text-brand-400" /> {title}
         </p>
         <button
           onClick={() => inputRef.current?.click()}
@@ -146,7 +163,7 @@ export function FilesSection({ moduleId }: { moduleId: string }) {
       {pending.length > 0 && (
         <Card hover={false} className="flex flex-col gap-2.5 p-3">
           <p className="text-[11px] font-medium text-ink/50">
-            Donnez un nom à chaque fichier avant de l'enregistrer :
+            Donnez un nom à chaque fichier avant de l&apos;enregistrer :
           </p>
           {pending.map((p) => (
             <div key={p.key} className="flex items-center gap-2">
@@ -178,7 +195,7 @@ export function FilesSection({ moduleId }: { moduleId: string }) {
 
       {!loading && files.length === 0 && pending.length === 0 && (
         <Card hover={false} className="p-4 text-center text-xs text-ink/40">
-          Aucun fichier importé pour ce module.
+          {emptyLabel}
         </Card>
       )}
 

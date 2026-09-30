@@ -1,7 +1,10 @@
-import type { QuizDefinition } from "../quizzes";
+import type { QuizDefinition, QuizQuestion } from "../quizzes";
 
+/** The original 20 M201 questions, kept untouched — they remain the single source of truth. */
 export const M201_QUIZ: QuizDefinition = {
   moduleId: "M201",
+  chapterId: "ch-1",
+  chapterTitle: "Cybersecurity Terminology",
   title: "Quiz M201 — Les activités du module",
   description:
     "20 questions basées sur l'ensemble des activités M201 : PSSI, rançongiciels, attaques Web OWASP/CWE, protection des applications, référentiels réglementaires, risques Cloud et cas pratiques.",
@@ -230,3 +233,59 @@ export const M201_QUIZ: QuizDefinition = {
     },
   ],
 };
+
+/**
+ * Explicit chapter attribution of the 20 M201 questions.
+ *
+ * Quizzes are chapter-level, so each question is attached to the chapter whose learning
+ * objectives it actually assesses. The attribution is not guessed per question: a question
+ * belongs to a chapter when the concept it tests is one of that chapter's objectives.
+ *
+ *  ch-1 "Cybersecurity Terminology"
+ *      → "Définir les notions de vulnérabilité, menace et risque" / "Distinguer
+ *        confidentialité, intégrité et disponibilité (triade CIA)"
+ *      → naming a weakness class (IDOR, SSRF, SSTI, CWE-*), the RaaS model, and the
+ *        availability/confidentiality/integrity mapping of the Groupomo case studies.
+ *
+ *  ch-2 "Standards and Regulations"
+ *      → "Connaître la norme ISO/IEC 27001" / "Comprendre les réglementations RGPD et loi 09-08"
+ *      → the whole PSSI set (the Moroccan security-policy system and its creation steps) and
+ *        the legal-authority question (loi 09-08, RGPD, CNDP, DGSSI, CNIL).
+ *
+ *  ch-3 "Security Principles"
+ *      → "Appliquer le principe de défense en profondeur" / "Identifier les principales
+ *        menaces et attaques courantes"
+ *      → what you do in practice: ransomware incident response, remediation of an obsolete
+ *        component, OWASP protection measures, defense in depth, cloud risk treatment and
+ *        benchmarking of cloud security solutions.
+ *
+ *  ch-4 "Cybersecurity Careers" has no matching activity yet, so it has no quiz — the UI
+ *  shows the usual "Tsenaw Update" empty state until the content exists.
+ */
+const M201_CHAPTER_QUESTION_IDS: Record<string, string[]> = {
+  "ch-1": ["m201-q6", "m201-q9", "m201-q10", "m201-q11", "m201-q12", "m201-q13", "m201-q20"],
+  "ch-2": ["m201-q1", "m201-q2", "m201-q3", "m201-q4", "m201-q5", "m201-q8", "m201-q17"],
+  "ch-3": ["m201-q7", "m201-q14", "m201-q15", "m201-q16", "m201-q18", "m201-q19"],
+};
+
+function questionsByIds(ids: string[]): QuizQuestion[] {
+  return ids
+    .map((id) => M201_QUIZ.questions.find((q) => q.id === id))
+    .filter((q): q is QuizQuestion => q !== undefined);
+}
+
+/** Chapter quiz questions for M201, derived from the untouched question pool above. */
+export const M201_CHAPTER_QUIZ_QUESTIONS: Record<string, QuizQuestion[]> = Object.fromEntries(
+  Object.entries(M201_CHAPTER_QUESTION_IDS).map(([chapterId, ids]) => [chapterId, questionsByIds(ids)])
+);
+
+/** Metadata of the pre-V1.09-02 module-level quiz, kept to preserve its already-stored result. */
+export const M201_LEGACY_QUIZ = {
+  moduleId: M201_QUIZ.moduleId,
+  title: M201_QUIZ.title,
+  total: M201_QUIZ.questions.length,
+};
+
+/** True when every question of the pool has been attributed to a chapter. */
+export const M201_ALL_QUESTIONS_ATTRIBUTED: boolean =
+  new Set(Object.values(M201_CHAPTER_QUESTION_IDS).flat()).size === M201_QUIZ.questions.length;

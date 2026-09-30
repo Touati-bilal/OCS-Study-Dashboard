@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { TaskFormSheet } from "./TaskFormSheet";
 import { useAppStore } from "@/store/useAppStore";
 import { getModuleById } from "@/lib/modules";
+import { TASK_PRIORITY_META, TASK_STATUS_META, TASK_STATUS_ORDER, sortTasksByRelevance } from "@/lib/tasks";
 import { cn, todayISO, addDays, toISODate, formatDateHuman } from "@/lib/utils";
 import {
   Plus,
@@ -22,21 +23,11 @@ import {
   ListTodo,
   MoveRight,
 } from "lucide-react";
-import type { Task, TaskPriority, TaskStatus } from "@/lib/types";
+import type { Task, TaskStatus } from "@/lib/types";
 
-const PRIORITY_META: Record<TaskPriority, { label: string; color: string }> = {
-  low: { label: "Basse", color: "#34d399" },
-  medium: { label: "Moyenne", color: "#fbbf24" },
-  high: { label: "Haute", color: "#fb7185" },
-};
-
-const STATUS_META: Record<TaskStatus, { label: string; color: string }> = {
-  todo: { label: "À faire", color: "#94a3b8" },
-  in_progress: { label: "En cours", color: "#48a3ff" },
-  completed: { label: "Terminé", color: "#34d399" },
-};
-
-const STATUS_ORDER: TaskStatus[] = ["todo", "in_progress", "completed"];
+const PRIORITY_META = TASK_PRIORITY_META;
+const STATUS_META = TASK_STATUS_META;
+const STATUS_ORDER: TaskStatus[] = TASK_STATUS_ORDER;
 
 export function TodoSection({
   filterModuleId,
@@ -59,14 +50,11 @@ export function TodoSection({
 
   const dayTasks = useMemo(
     () =>
-      tasks
-        .filter((t) => t.deadline === selectedDate)
-        .filter((t) => (filterModuleId ? t.moduleId === filterModuleId : true))
-        .sort((a, b) => {
-          const order: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
-          if (order[a.priority] !== order[b.priority]) return order[a.priority] - order[b.priority];
-          return b.createdAt.localeCompare(a.createdAt);
-        }),
+      sortTasksByRelevance(
+        tasks
+          .filter((t) => t.deadline === selectedDate)
+          .filter((t) => (filterModuleId ? t.moduleId === filterModuleId : true))
+      ),
     [tasks, selectedDate, filterModuleId]
   );
 

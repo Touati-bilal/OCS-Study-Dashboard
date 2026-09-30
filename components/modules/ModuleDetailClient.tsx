@@ -12,9 +12,10 @@ import { ChaptersList } from "./ChaptersList";
 import { NotesEditor } from "./NotesEditor";
 import { MaterialsList } from "./MaterialsList";
 import { ActivitiesSection } from "./ActivitiesSection";
-import { QuizSection } from "./QuizSection";
+import { DocumentsSection } from "./DocumentsSection";
 import { TpProjectsSection } from "./TpProjectsSection";
 import { FilesSection } from "./FilesSection";
+import { TaskBoard } from "@/components/tasks/TaskBoard";
 import { TodoSection } from "@/components/dashboard/TodoSection";
 import { useModuleStats } from "@/hooks/useModuleStats";
 import { isOccOrsModule, type ModuleDef } from "@/lib/modules";
@@ -23,6 +24,7 @@ import type { MaterialGroup } from "@/lib/materials.server";
 import type { ActivityGroup } from "@/lib/activities.server";
 import { Target } from "lucide-react";
 
+/** OCC / ORS / EGTS tabs — kept exactly as they were before V1.09-02. */
 const BASE_TABS = [
   { id: "apercu", label: "Aperçu" },
   { id: "chapitres", label: "Chapitres" },
@@ -34,9 +36,16 @@ const BASE_TABS = [
 
 const TP_PROJECTS_TAB = { id: "tp-projets", label: "TP & Projects" };
 
+/**
+ * OCS modules: the quiz moved into each chapter, and the documents are grouped into
+ * Cours / Activités / Fichiers-Updates / Proger(TP, Proger) instead of separate top-level tabs.
+ */
 const OCS_TABS = [
-  { id: "activites", label: "Les Activités" },
-  { id: "quiz", label: "Quiz" },
+  { id: "apercu", label: "Aperçu" },
+  { id: "parties", label: "Les parties" },
+  { id: "documents", label: "Documents" },
+  { id: "notes", label: "Notes" },
+  { id: "taches", label: "Tâches" },
 ];
 
 export function ModuleDetailClient({
@@ -53,12 +62,12 @@ export function ModuleDetailClient({
   const [tab, setTab] = useState("apercu");
   const [stat] = useModuleStats([module]);
   const isOcs = isOcsMainModule(module);
-  const tabs = [
-    ...BASE_TABS.slice(0, 4),
-    ...(isOcs ? OCS_TABS : []),
-    ...BASE_TABS.slice(4),
-    ...(module.efmRegional ? [TP_PROJECTS_TAB] : []),
-  ];
+  const tabs = isOcs
+    ? OCS_TABS
+    : [
+        ...BASE_TABS,
+        ...(module.efmRegional ? [TP_PROJECTS_TAB] : []),
+      ];
 
   return (
     <>
@@ -126,21 +135,44 @@ export function ModuleDetailClient({
           </div>
         )}
 
-        {tab === "chapitres" && <ChaptersList moduleId={module.id} chapters={module.chapters} />}
+        {/* OCS: "Les parties" — each chapter carries its own quiz. */}
+        {tab === "parties" && isOcs && (
+          <ChaptersList moduleId={module.id} chapters={module.chapters} color={module.color} showQuiz />
+        )}
+
+        {/* OCC / ORS / EGTS: unchanged chapter list. */}
+        {tab === "chapitres" && !isOcs && <ChaptersList moduleId={module.id} chapters={module.chapters} />}
 
         {tab === "notes" && <NotesEditor moduleId={module.id} />}
 
-        {tab === "documents" && <MaterialsList groups={materialGroups} />}
+        {tab === "documents" &&
+          (isOcs ? (
+            <DocumentsSection
+              moduleId={module.id}
+              materialGroups={materialGroups}
+              activityGroups={activityGroups}
+              color={module.color}
+            />
+          ) : (
+            <MaterialsList groups={materialGroups} />
+          ))}
 
-        {tab === "activites" && isOcs && <ActivitiesSection groups={activityGroups} color={module.color} />}
+        {tab === "fichiers" && !isOcs && <FilesSection moduleId={module.id} />}
 
-        {tab === "quiz" && isOcs && <QuizSection moduleId={module.id} color={module.color} />}
+        {tab === "taches" &&
+          (isOcs ? (
+            <TaskBoard
+              moduleId={module.id}
+              title="Tâches du module"
+              emptyLabel="Aucune tâche en attente pour ce module."
+              showModuleBadge={false}
+              padded={false}
+            />
+          ) : (
+            <TodoSection filterModuleId={module.id} compact title="Tâches du module" />
+          ))}
 
-        {tab === "fichiers" && <FilesSection moduleId={module.id} />}
-
-        {tab === "taches" && <TodoSection filterModuleId={module.id} compact title="Tâches du module" />}
-
-        {tab === "tp-projets" && module.efmRegional && <TpProjectsSection moduleId={module.id} />}
+        {tab === "tp-projets" && !isOcs && module.efmRegional && <TpProjectsSection moduleId={module.id} />}
       </div>
     </>
   );

@@ -15,6 +15,6 @@
  */
 export const APP_NAME = "OCS Study Dashboard";
 
-export const APP_VERSION = "V1.09-01";
+export const APP_VERSION = "V1.09-03";
 
 export const APP_VERSION_LABEL = `Version ${APP_VERSION}`;

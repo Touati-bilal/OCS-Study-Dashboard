@@ -10,12 +10,26 @@
   --ink-rgb: 255 255 255;
   --paper-rgb: 0 0 0;
   color-scheme: dark;
+
+  /* Opaque form surfaces.
+     Form controls must be opaque: a translucent background makes the native dropdown popup
+     composite over the browser's default (light) surface, which renders white text on white in
+     dark mode. These are the same visual tint as ink/4 and ink/6, but fully opaque and derived
+     from the theme tokens, so they follow the active theme automatically. */
+  --field-surface: #0a0a0a;
+  --field-surface: color-mix(in srgb, rgb(var(--ink-rgb)) 4%, rgb(var(--paper-rgb)));
+  --field-surface-hover: #0f0f0f;
+  --field-surface-hover: color-mix(in srgb, rgb(var(--ink-rgb)) 7%, rgb(var(--paper-rgb)));
 }
 
 [data-theme="white"] {
   --ink-rgb: 0 0 0;
   --paper-rgb: 255 255 255;
   color-scheme: light;
+  --field-surface: #f5f5f5;
+  --field-surface: color-mix(in srgb, rgb(var(--ink-rgb)) 4%, rgb(var(--paper-rgb)));
+  --field-surface-hover: #ebebeb;
+  --field-surface-hover: color-mix(in srgb, rgb(var(--ink-rgb)) 7%, rgb(var(--paper-rgb)));
 }
 
 html,
@@ -75,4 +89,44 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 [data-theme="white"] input[type="date"]::-webkit-calendar-picker-indicator,
 [data-theme="white"] input[type="time"]::-webkit-calendar-picker-indicator {
   filter: invert(0);
+}
+
+/* Native <select> dropdown list.
+   Browsers render the option list in a popup that does not inherit the page background, so every
+   state is set explicitly from the theme tokens. Without this, dark mode shows a white list with
+   white text. */
+select {
+  background-color: var(--field-surface);
+  color: rgb(var(--ink-rgb));
+}
+
+select option,
+select optgroup {
+  background-color: var(--field-surface);
+  color: rgb(var(--ink-rgb));
+  font-weight: 400;
+}
+
+select option:hover,
+select option:focus,
+select option:active {
+  background-color: var(--field-surface-hover);
+  color: rgb(var(--ink-rgb));
+}
+
+select option:checked {
+  background-color: color-mix(in srgb, rgb(var(--ink-rgb)) 12%, rgb(var(--paper-rgb)));
+  color: rgb(var(--ink-rgb));
+  font-weight: 600;
+}
+
+select option:disabled {
+  color: rgb(var(--ink-rgb) / 0.4);
+}
+
+select:focus-visible,
+select:focus {
+  outline: none;
+  background-color: var(--field-surface-hover);
+  color: rgb(var(--ink-rgb));
 }

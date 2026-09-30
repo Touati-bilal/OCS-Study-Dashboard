@@ -6,25 +6,35 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test:prv": "bash tests/prv/run.sh",
+    "prv:setup": "tsx scripts/prv-setup.mts"
   },
   "dependencies": {
+    "framer-motion": "^11.11.9",
+    "lucide-react": "^0.446.0",
     "next": "14.2.35",
+    "pdfkit": "^0.15.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "framer-motion": "^11.11.9",
-    "zustand": "^4.5.5",
-    "lucide-react": "^0.446.0"
+    "server-only": "^0.0.1",
+    "web-push": "^3.6.7",
+    "zustand": "^4.5.5"
   },
   "devDependencies": {
-    "typescript": "^5.6.3",
     "@types/node": "^20.16.10",
+    "@types/pdfkit": "^0.17.6",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
+    "@types/web-push": "^3.6.4",
     "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "14.2.35",
+    "playwright": "^1.49.1",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.13",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "14.2.35"
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
   }
 }

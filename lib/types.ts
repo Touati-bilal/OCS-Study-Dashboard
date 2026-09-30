@@ -24,18 +24,35 @@ export interface QuizResult {
   completedAt: string;
 }
 
-export type TaskPriority = "low" | "medium" | "high";
+/**
+ * Task priority is a *reason*, not a magnitude: the colour tells why the task matters.
+ *   "prof"      red    — the professor explicitly assigned / recommended it
+ *   "important" orange — personally important for me
+ *   "normal"    green  — a normal task that may be useful in the future
+ */
+export type TaskPriority = "prof" | "important" | "normal";
+
 export type TaskStatus = "todo" | "in_progress" | "completed";
 
 export interface Task {
   id: string;
   title: string;
   description?: string;
+  /** Automatically filled from the module the task is created in — never picked by hand there. */
   moduleId: string | null;
-  deadline: string;
+  /** Optional chapter / "partie" of the module, when the task belongs to one. */
+  chapterId?: string;
+  /** Due date. Optional: a task can be open-ended. */
+  deadline?: string;
   priority: TaskPriority;
   status: TaskStatus;
   createdAt: string;
+  /** Set the first time the task reaches the "completed" status, never overwritten afterwards. */
+  completedAt?: string;
+  notes?: string;
+  links?: string[];
+  /** Where the task comes from (professor's instruction, activity, article...). */
+  source?: string;
 }
 
 export type Theme = "black" | "white";

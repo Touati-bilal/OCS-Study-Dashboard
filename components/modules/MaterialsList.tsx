@@ -26,12 +26,18 @@ const EXT_COLOR: Record<string, string> = {
   ".md": "#94a3b8",
 };
 
-export function MaterialsList({ groups }: { groups: MaterialGroup[] }) {
+export function MaterialsList({
+  groups,
+  emptyLabel = "Aucun document trouvé dans ce dossier.",
+}: {
+  groups: MaterialGroup[];
+  emptyLabel?: string;
+}) {
   if (groups.length === 0) {
     return (
       <Card className="flex flex-col items-center gap-2 p-6 text-center">
         <FolderOpen size={22} className="text-ink/30" />
-        <p className="text-sm text-ink/50">Aucun document trouvé dans ce dossier.</p>
+        <p className="text-sm text-ink/50">{emptyLabel}</p>
       </Card>
     );
   }
