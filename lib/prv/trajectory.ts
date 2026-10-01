@@ -127,12 +127,24 @@ export function weightedProgress(metrics: WeeklyMetrics, settings: ReportSetting
 
 export type Trajectory = "improving" | "stable" | "slipping" | "insufficient-data";
 
+/** Visual direction, shown in the report next to the verdict. */
+export type TrendArrow = "↑" | "→" | "↓" | "?";
+
 export interface TrajectoryVerdict {
   trajectory: Trajectory;
+  /** The arrow the report prints, so the direction is legible at a glance. */
+  arrow: TrendArrow;
   /** One line the report shows, with the numbers that produced it. */
   headline: string;
   /** The exact rule that fired, so the verdict is auditable rather than a black box. */
   rule: string;
+  /**
+   * Why the verdict is what it is, one measurable fact per line.
+   *
+   * Every line restates a number the metrics already produced. No line interprets effort, mood or
+   * intention, and none of them explains a task away: the report says what is overdue, not why.
+   */
+  explain: string[];
   delta: number | null;
   points: TrendPoint[];
 }
@@ -177,18 +189,33 @@ export function assessTrajectory(
   const points = [...previous, current];
   const rule = `écart ≥ ${settings.trendThreshold} pts entre la progression pondérée de la semaine et la moyenne des ${settings.trendWindow} semaines précédentes`;
 
+  // The measurable facts behind the verdict. Each line is a figure the metrics already produced, so
+  // the explanation can be checked against the tables rather than taken on trust.
+  const explain: string[] = [
+    `Progression pondérée de la période : ${Math.round(current.weightedProgress * 10) / 10} %.`,
+    previous.length === 0
+      ? "Aucune semaine précédente n'a encore été mesurée."
+      : `Moyenne des ${previous.length} période(s) précédente(s) : ${Math.round(previousAverageOf(previous) * 10) / 10} %.`,
+    `Tâches prévues terminées : ${metrics.completedPlanned.length}/${metrics.planned.length}.`,
+    `Tâches terminées sur la période (hors plan) : ${metrics.completed.length}.`,
+    `Tâches prévues non terminées : ${metrics.incomplete.length}.`,
+    `Tâches en retard de plus de ${settings.overdueWarningDays} jours : ${metrics.longOverdue.length}.`,
+    `Jours de la période : ${metrics.periodDays} · jours avec au moins un enregistrement : ${metrics.days.filter((d) => d.active).length}.`,
+  ];
+
   if (points.length < 2) {
     return {
       trajectory: "insufficient-data",
-      headline: "Pas encore assez de semaines pour établir une tendance.",
+      arrow: "?",
+      headline: "Pas encore assez de périodes pour établir une tendance.",
       rule,
+      explain,
       delta: null,
       points,
     };
   }
 
-  const previousAverage =
-    previous.reduce((sum, p) => sum + p.weightedProgress, 0) / Math.max(1, previous.length);
+  const previousAverage = previousAverageOf(previous);
   const delta = Math.round((current.weightedProgress - previousAverage) * 10) / 10;
 
   const rateText =
@@ -199,8 +226,10 @@ export function assessTrajectory(
   if (delta >= settings.trendThreshold) {
     return {
       trajectory: "improving",
+      arrow: "↑",
       headline: `Progression en hausse : +${delta} pts de progression pondérée (${rateText}).`,
       rule,
+      explain,
       delta,
       points,
     };
@@ -208,19 +237,28 @@ export function assessTrajectory(
   if (delta <= -settings.trendThreshold) {
     return {
       trajectory: "slipping",
+      arrow: "↓",
       headline: `Progression en baisse : ${delta} pts de progression pondérée (${rateText}).`,
       rule,
+      explain,
       delta,
       points,
     };
   }
   return {
     trajectory: "stable",
+    arrow: "→",
     headline: `Progression stable : ${delta >= 0 ? "+" : ""}${delta} pts (${rateText}).`,
     rule,
+    explain,
     delta,
     points,
   };
+}
+
+function previousAverageOf(previous: TrendPoint[]): number {
+  if (previous.length === 0) return 0;
+  return previous.reduce((sum, p) => sum + p.weightedProgress, 0) / previous.length;
 }
 
 export type RecommendationKind = "reward" | "corrective" | "info";
@@ -301,7 +339,9 @@ export function buildRecommendations(
 
   // --- reward: a clean, complete week ---
   const hasPlan = metrics.planned.length > 0;
-  if (hasPlan && (metrics.completionRate ?? 0) >= settings.onTrackRate && metrics.longOverdue.length === 0) {
+  const weekOnTrack =
+    hasPlan && (metrics.completionRate ?? 0) >= settings.onTrackRate && metrics.longOverdue.length === 0;
+  if (weekOnTrack) {
     out.push({
       kind: "reward",
       title: `Semaine tenue : ${metrics.completionRate} % des tâches prévues`,
@@ -310,7 +350,60 @@ export function buildRecommendations(
       evidence: [
         `${metrics.completedPlanned.length} tâche${metrics.completedPlanned.length > 1 ? "s" : ""} planifiée${metrics.completedPlanned.length > 1 ? "s" : ""} terminée${metrics.completedPlanned.length > 1 ? "s" : ""} sur ${metrics.planned.length}`,
         `${metrics.totals.openAtWeekEnd} tâche${metrics.totals.openAtWeekEnd > 1 ? "s" : ""} encore ouverte${metrics.totals.openAtWeekEnd > 1 ? "s" : ""} au total`,
+        `Seuil « semaine tenue » paramétré : ${settings.onTrackRate} %`,
       ],
+    });
+  }
+
+  /**
+   * Rest allowance, measured rather than invented.
+   *
+   * `periodHours` is the difference between two real cumulative readings, so the suggestion can only
+   * be made when that difference exists. Half the recorded study time is a fixed, inspectable rule -
+   * no fatigue, health or motivation is inferred, and no amount is produced when nothing was measured.
+   */
+  if (weekOnTrack && metrics.periodHours !== null && metrics.periodHours > 0) {
+    const rest = Math.round(metrics.periodHours / 2);
+    out.push({
+      kind: "reward",
+      title: `Récompense suggérée : ${rest} h de repos.`,
+      detail: `Environ la moitié des ${metrics.periodHours} h d'étude enregistrées sur la période, arrondies à l'heure. Montant calculé sur vos heures saisies, rien d'autre.`,
+      evidence: [`Heures d'étude sur la période : ${metrics.periodHours} h (différence entre deux relevés réels)`],
+    });
+  }
+
+  // --- corrective: the period's activity itself fell away ---
+  if (verdict.trajectory === "slipping" || (metrics.activityCount === 0 && metrics.periodDays > 0)) {
+    const activeDays = metrics.days.filter((d) => d.active).length;
+    out.push({
+      kind: "corrective",
+      title: "Les indicateurs montrent une baisse d'activité cette période.",
+      detail:
+        "Le nombre d'enregistrements datés est inférieur à celui des périodes précédentes. Les chiffres ci-dessous décrivent l'activité, sans en expliquer la cause.",
+      evidence: [
+        `Événements datés sur la période : ${metrics.activityCount} (tâches terminées ${metrics.completed.length}, quiz ${metrics.quiz.attemptsInWeek}, notes ${metrics.journal.entriesInWeek})`,
+        `Jours avec au moins un enregistrement : ${activeDays}/${metrics.periodDays}`,
+        metrics.periodHours === null
+          ? "Heures d'étude de la période : non mesurables (aucun relevé antérieur)."
+          : `Heures d'étude de la période : ${metrics.periodHours} h`,
+      ],
+    });
+  }
+
+  // --- corrective: a real backlog left open ---
+  if (
+    hasPlan &&
+    metrics.incomplete.length > 0 &&
+    (metrics.unfinishedRate ?? 0) >= 50 &&
+    metrics.longOverdue.length === 0
+  ) {
+    out.push({
+      kind: "corrective",
+      title: "Certaines tâches nécessitent un rattrapage.",
+      detail: `Moitié des tâches prévues au moins non terminées à la fin de la période (${metrics.unfinishedRate} %). Les replanifier ou les retirer évite de les retrouver en retard la période suivante.`,
+      evidence: metrics.incomplete
+        .slice(0, 3)
+        .map((t) => `« ${t.title} » — échéance ${t.deadline ?? "—"}`),
     });
   }
 

@@ -70,6 +70,108 @@ export interface WeekWindow {
   weekEnd: IsoDate;
 }
 
+/**
+ * Longest period a report may span.
+ *
+ * Every date loop below is proportional to the length of the period - the per-day breakdown builds
+ * one entry per day - so an unbounded range would let a single request allocate without limit. A
+ * year is far longer than any study week and still cheap.
+ */
+export const MAX_PERIOD_DAYS = 366;
+
+/**
+ * Validates a caller-supplied analysis period.
+ *
+ * A report window is only ever `(weekStart, weekEnd)`, and `computeWeeklyMetrics` already treats it
+ * as such, so an arbitrary range needs no second code path: the metrics, the trajectory and the
+ * recommendations are identical whether the window is seven days or twelve. What has to be checked
+ * here is that both ends are real dates, that the order is not inverted, and that the span is
+ * bounded. Returns `null` rather than throwing, so a route can answer 400.
+ */
+export function normalisePeriod(
+  start: unknown,
+  end: unknown,
+  maxDays: number = MAX_PERIOD_DAYS
+): WeekWindow | null {
+  const from = toIsoDate(typeof start === "string" ? start : null);
+  const to = toIsoDate(typeof end === "string" ? end : null);
+  if (!from || !to) return null;
+  const span = daysBetween(from, to) + 1;
+  if (span < 1 || span > maxDays) return null;
+  return { weekStart: from, weekEnd: to };
+}
+
+/** Inclusive day count of a window: a one-day period is 1, a full week is 7. */
+export function periodLength(period: WeekWindow): number {
+  return daysBetween(period.weekStart, period.weekEnd) + 1;
+}
+
+/** True when the window is exactly the canonical 7-day week ending on `weekEnd`. */
+export function isCanonicalWeek(period: WeekWindow, reportDay: number = DEFAULT_REPORT_DAY): boolean {
+  return (
+    daysBetween(period.weekStart, period.weekEnd) === 6 &&
+    dayOfWeek(period.weekEnd) === (isValidReportDay(reportDay) ? reportDay : DEFAULT_REPORT_DAY)
+  );
+}
+
+/** Every date in `[start, end]`, oldest first. Drives the per-day breakdown. */
+export function eachDay(start: IsoDate, end: IsoDate): IsoDate[] {
+  const days: IsoDate[] = [];
+  // An inverted range yields nothing. Without this the walk below would never meet `end` and would
+  // spend the whole guard budget listing days past the requested end, quietly wrong rather than
+  // empty - `normalisePeriod` rejects this input, but this function is exported and callable alone.
+  if (daysBetween(start, end) < 0) return days;
+  let cursor = start;
+  // Bounded by the caller's range check; the extra guard keeps a direct call from looping forever.
+  for (let i = 0; i <= MAX_PERIOD_DAYS; i++) {
+    days.push(cursor);
+    if (cursor === end) break;
+    const next = addDays(cursor, 1);
+    if (daysBetween(cursor, next) !== 1) break;
+    cursor = next;
+  }
+  return days;
+}
+
+/**
+ * Stable key for an analysis period.
+ *
+ * A report is identified by *both* ends of its window, not by the end alone: two custom ranges can
+ * share an end date, and collapsing them onto one key would silently overwrite one report with
+ * another. Reports generated before arbitrary ranges existed are stored under `weekKey`, and
+ * `parseReportRef` reads that shape too so the existing history keeps working untouched.
+ */
+export function periodKey(period: WeekWindow): string {
+  return `p-${period.weekStart}_${period.weekEnd}`;
+}
+
+export function parsePeriodKey(key: string): WeekWindow | null {
+  const match = /^p-(\d{4}-\d{2}-\d{2})_(\d{4}-\d{2}-\d{2})$/.exec(key);
+  if (!match) return null;
+  return normalisePeriod(match[1], match[2]);
+}
+
+/**
+ * Resolves any report reference a URL may carry.
+ *
+ * Accepts the current `p-<start>_<end>` key, a legacy `w-<end>` key, and - because the older routes
+ * and their tests address reports by end date alone - a bare `YYYY-MM-DD`. A bare date resolves to
+ * the canonical week ending that day when one exists, and only falls back to an arbitrary period
+ * with that end date when there is no week report, so an old link can never be re-pointed at an
+ * unrelated custom range.
+ */
+export function parseReportRef(ref: string): WeekWindow | null {
+  const value = ref.trim();
+  if (value.startsWith("p-")) return parsePeriodKey(value);
+  if (value.startsWith("w-")) {
+    const end = toIsoDate(value.slice(2));
+    return end ? { weekStart: addDays(end, -6), weekEnd: end } : null;
+  }
+  // A bare date identifies the canonical week ending on it, which is what the old routes meant.
+  const end = toIsoDate(value);
+  return end ? { weekStart: addDays(end, -6), weekEnd: end } : null;
+}
+
 export function isValidReportDay(day: unknown): day is number {
   return typeof day === "number" && Number.isInteger(day) && day >= 0 && day <= 6;
 }

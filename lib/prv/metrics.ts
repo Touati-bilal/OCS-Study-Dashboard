@@ -11,10 +11,77 @@
 import { getModuleById, type ModuleDef } from "@/lib/modules";
 import type { QuizResult, Task, TaskPriority, TaskStatus } from "@/lib/types";
 import type { JournalSnapshot, ModuleRuntimeSnapshot, PrvSnapshot } from "./snapshot";
-import { daysBetween, isWithin, toIsoDate, type IsoDate, type WeekWindow } from "./weekly";
+import {
+  dayOfWeek,
+  daysBetween,
+  eachDay,
+  formatDayName,
+  formatShortDate,
+  isWithin,
+  periodLength,
+  toIsoDate,
+  type IsoDate,
+  type WeekWindow,
+} from "./weekly";
 
 /** A task is "long overdue" past this many days, which is also the §35 warning threshold. */
 export const OVERDUE_WARNING_DAYS = 14;
+
+/**
+ * One quiz attempt, with the day it happened.
+ *
+ * The store keeps only the latest result per chapter, so this is built from what is actually stored:
+ * an attempt exists because a result carries a `completedAt`. It is never reconstructed or estimated.
+ */
+export interface QuizAttempt {
+  moduleId: string;
+  chapterId: string | null;
+  date: IsoDate;
+  completedAt: string;
+  correct: number;
+  incorrect: number;
+  total: number;
+  percentage: number;
+}
+
+/** What a module looked like at the end of the last report before this period. */
+export interface ProgressBaseline {
+  moduleId: string;
+  objectivesDone: number;
+  objectiveRate: number;
+  chapterRate: number;
+  /** Study hours are cumulative in the store, so the baseline value is a real earlier reading. */
+  hoursStudied: number;
+}
+
+/**
+ * One day of the period, built entirely from dated records in the store.
+ *
+ * There is no activity log in the app, so nothing here is written down as it happens: every figure
+ * is derived from a date that already exists on a task, a quiz result or a journal entry. A day with
+ * no dated record at all is reported as an empty day rather than being left out, so a week of
+ * silence is visible instead of invisible.
+ */
+export interface DayActivity {
+  date: IsoDate;
+  dayOfWeek: number;
+  /** "lundi 1 oct. 2026". */
+  label: string;
+  /** Tasks whose deadline falls on this day. */
+  planned: number;
+  /** Tasks that reached "completed" on this day. */
+  completed: number;
+  /** Tasks created on this day. */
+  created: number;
+  /** Planned on this day and still open at the end of the period. */
+  missed: number;
+  /** Open tasks already past due before this day - the backlog the day started with. */
+  overdueAtDay: number;
+  quizzes: number;
+  journalEntries: number;
+  /** True when at least one dated record exists for this day. */
+  active: boolean;
+}
 
 export interface TaskRef {
   id: string;
@@ -60,6 +127,29 @@ export interface ModuleWeekStat {
   chaptersTotal: number;
   chapterRate: number;
   hoursStudied: number;
+  /**
+   * Progress recorded for this module at the end of the previous report, or `null` when there is no
+   * earlier report to read it from.
+   *
+   * The store holds one current value per objective and no history of objective toggles, so the only
+   * real earlier reading available is a report that was already generated. `null` therefore means
+   * "not measurable", and the report says so rather than printing a fabricated zero.
+   */
+  startProgress: number | null;
+  /** Progress now: objectives completed over total, the unit the app actually tracks. */
+  endProgress: number;
+  /** `endProgress - startProgress`, or `null` without a baseline. */
+  progressChange: number | null;
+  startHours: number | null;
+  hoursDelta: number | null;
+  tasksCompletedInPeriod: number;
+  quizAttemptsInPeriod: number;
+  bestQuizPercentage: number | null;
+  /** Objectives validated in the app's own completion model, plus what is left. */
+  activitiesCompleted: number;
+  activitiesRemaining: number;
+  /** Chapters with real dated activity inside the period. */
+  chaptersStudied: number;
 }
 
 export interface ChapterProgress {
@@ -72,11 +162,19 @@ export interface ChapterProgress {
   /** Best chapter quiz result during the week, when one exists. */
   quiz: QuizResult | null;
   openTasks: number;
+  /** Tasks completed in this chapter inside the period. */
+  completedInPeriod: number;
+  /** Best quiz attempt in this chapter inside the period, when one exists. */
+  quizInPeriod: QuizAttempt | null;
+  /** True when the chapter has real dated activity inside the period. */
+  studied: boolean;
 }
 
 export interface WeeklyMetrics {
   weekStart: IsoDate;
   weekEnd: IsoDate;
+  /** Inclusive number of days covered. 7 for a week, more for a custom range. */
+  periodDays: number;
   /** Tasks whose deadline falls inside the week. */
   planned: TaskRef[];
   /** Tasks that reached "completed" during the week, whether or not they were on the plan. */
@@ -108,6 +206,13 @@ export interface WeeklyMetrics {
     openAtWeekEnd: number;
     completedAllTime: number;
     createdThisWeek: number;
+    /**
+     * Status counts over every task the report saw, not only the planned ones.
+     *
+     * The buckets are the store's own three statuses, so the distribution is a count rather than a
+     * derivation: it can never be split differently from what the board shows.
+     */
+    byStatus: Record<TaskStatus, number>;
   };
   completionRate: number | null;
   byPriority: Record<TaskPriority, PriorityBucket>;
@@ -121,7 +226,32 @@ export interface WeeklyMetrics {
   quiz: {
     attemptsInWeek: number;
     bestInWeek: { moduleId: string; chapterId: string | null; percentage: number } | null;
+    /** Every attempt dated inside the period, oldest first. */
+    attempts: QuizAttempt[];
+    /** Mean score across the period's attempts, or `null` when there was none. */
+    averagePercentage: number | null;
+    /** Highest and lowest attempt scores, or `null` when there was none. */
+    bestPercentage: number | null;
+    lowestPercentage: number | null;
+    correctAnswers: number;
+    totalQuestions: number;
   };
+  /** One entry per day of the period, oldest first, including days with no activity. */
+  days: DayActivity[];
+  /** Real dated study events in the period: tasks completed + quiz attempts + journal entries. */
+  activityCount: number;
+  /** `incomplete / planned`, or `null` when nothing was planned. */
+  unfinishedRate: number | null;
+  /**
+   * Study hours logged during the period, or `null` when no earlier reading exists to subtract from.
+   *
+   * The store keeps a cumulative figure per module, so a period's hours only exist as a difference
+   * between two real readings. That difference is what a previous report provides, which is why this
+   * is `null` until a second report exists.
+   */
+  periodHours: number | null;
+  /** True when the period has no dated record at all: "no data", never "0 %". */
+  emptyPeriod: boolean;
   journal: {
     entriesInWeek: number;
     /** The user's own words on what they did not understand. */
@@ -184,7 +314,12 @@ function objectiveTotals(moduleDef: ModuleDef | undefined, runtime: ModuleRuntim
   return { done: Math.min(done, total || done), total };
 }
 
-function chapterProgress(snapshot: PrvSnapshot, week: WeekWindow, tasks: TaskRef[]): ChapterProgress[] {
+function chapterProgress(
+  snapshot: PrvSnapshot,
+  week: WeekWindow,
+  tasks: TaskRef[],
+  attempts: QuizAttempt[]
+): ChapterProgress[] {
   // Include every module that has either a runtime record or tasks, so a module is never reported
   // as having "0 chapters" merely because the store has no runtime entry for it yet.
   const moduleIds = new Set<string>([
@@ -207,6 +342,18 @@ function chapterProgress(snapshot: PrvSnapshot, week: WeekWindow, tasks: TaskRef
       const openTasks = tasks.filter(
         (t) => t.moduleId === moduleId && t.chapterId === chapter.id && t.status !== "completed"
       ).length;
+      const completedInPeriod = tasks.filter(
+        (t) =>
+          t.moduleId === moduleId &&
+          t.chapterId === chapter.id &&
+          t.status === "completed" &&
+          isWithin(toIsoDate(t.completedAt) ?? "", week.weekStart, week.weekEnd)
+      ).length;
+      const chapterAttempts = attempts.filter((a) => a.moduleId === moduleId && a.chapterId === chapter.id);
+      const quizInPeriod =
+        chapterAttempts.length === 0
+          ? null
+          : chapterAttempts.reduce((best, current) => (current.percentage > best.percentage ? current : best));
       out.push({
         moduleId,
         chapterId: chapter.id,
@@ -216,18 +363,113 @@ function chapterProgress(snapshot: PrvSnapshot, week: WeekWindow, tasks: TaskRef
         rate: objectivesTotal === 0 ? 0 : Math.round((objectivesDone / objectivesTotal) * 1000) / 10,
         quiz,
         openTasks,
+        completedInPeriod,
+        quizInPeriod,
+        // "Studied" means a dated record exists for the chapter in this period - never inferred
+        // from the chapter simply existing in the curriculum.
+        studied: completedInPeriod > 0 || quizInPeriod !== null,
       });
     }
   }
-  void week;
   return out;
+}
+
+/**
+ * Every quiz attempt whose result is dated inside the period, oldest first.
+ *
+ * Both stores are read: the per-chapter results and the older module-level ones. A result with an
+ * unusable date is skipped rather than assigned to the period.
+ */
+function collectQuizAttempts(snapshot: PrvSnapshot, week: WeekWindow): QuizAttempt[] {
+  const attempts: QuizAttempt[] = [];
+  for (const [moduleId, byChapter] of Object.entries(snapshot.chapterQuiz ?? {})) {
+    for (const [chapterId, result] of Object.entries(byChapter)) {
+      const date = toIsoDate(result.completedAt);
+      if (!date || !isWithin(date, week.weekStart, week.weekEnd)) continue;
+      attempts.push({
+        moduleId,
+        chapterId,
+        date,
+        completedAt: result.completedAt,
+        correct: result.correct,
+        incorrect: result.incorrect,
+        total: result.total,
+        percentage: result.percentage,
+      });
+    }
+  }
+  for (const [moduleId, result] of Object.entries(snapshot.legacyQuiz ?? {})) {
+    const date = toIsoDate(result.completedAt);
+    if (!date || !isWithin(date, week.weekStart, week.weekEnd)) continue;
+    attempts.push({
+      moduleId,
+      chapterId: null,
+      date,
+      completedAt: result.completedAt,
+      correct: result.correct,
+      incorrect: result.incorrect,
+      total: result.total,
+      percentage: result.percentage,
+    });
+  }
+  return attempts.sort((a, b) => a.completedAt.localeCompare(b.completedAt));
+}
+
+/**
+ * One row per day of the period.
+ *
+ * Every column counts records that already carry that date, so a day genuinely without work reads as
+ * zero rather than being invented. `overdueAtDay` is the number of still-open tasks whose deadline
+ * was already behind at the start of the day: it is what makes a carried-over backlog visible
+ * without attributing it to any one day.
+ */
+function buildDayActivity(
+  week: WeekWindow,
+  refs: TaskRef[],
+  attempts: QuizAttempt[],
+  journal: JournalSnapshot[]
+): DayActivity[] {
+  const days = eachDay(week.weekStart, week.weekEnd);
+  const openAtEnd = refs.filter((t) => t.status !== "completed");
+
+  return days.map((date) => {
+    const dow = dayOfWeek(date);
+    const planned = refs.filter((t) => toIsoDate(t.deadline) === date).length;
+    const completed = refs.filter(
+      (t) => t.status === "completed" && toIsoDate(t.completedAt) === date
+    ).length;
+    const created = refs.filter((t) => toIsoDate(t.createdAt) === date).length;
+    const missed = openAtEnd.filter((t) => toIsoDate(t.deadline) === date).length;
+    const overdueAtDay = openAtEnd.filter((t) => {
+      const deadline = toIsoDate(t.deadline);
+      return deadline !== null && deadline < date;
+    }).length;
+    const quizzes = attempts.filter((a) => a.date === date).length;
+    const journalEntries = journal.filter((e) => e.date === date).length;
+
+    return {
+      date,
+      dayOfWeek: dow,
+      label: `${formatDayName(dow)} ${formatShortDate(date)}`,
+      planned,
+      completed,
+      created,
+      missed,
+      overdueAtDay,
+      quizzes,
+      journalEntries,
+      active: completed > 0 || created > 0 || quizzes > 0 || journalEntries > 0,
+    };
+  });
 }
 
 function moduleStats(
   snapshot: PrvSnapshot,
   week: WeekWindow,
   tasks: TaskRef[],
-  chapters: ChapterProgress[]
+  chapters: ChapterProgress[],
+  attempts: QuizAttempt[],
+  baseline: ReadonlyMap<string, ProgressBaseline>
 ): ModuleWeekStat[] {
   const moduleIds = new Set<string>([
     ...tasks.map((t) => t.moduleId).filter((id): id is string => id !== null),
@@ -245,6 +487,16 @@ function moduleStats(
       const { done, total } = objectiveTotals(moduleDef, runtime);
       const moduleChapters = chapters.filter((c) => c.moduleId === moduleId);
       const chaptersDone = moduleChapters.filter((c) => c.objectivesTotal > 0 && c.rate === 100).length;
+      const hoursStudied = runtime?.hoursStudied ?? 0;
+      const objectiveRate = total === 0 ? 0 : Math.round((done / total) * 1000) / 10;
+      const chapterRate =
+        moduleChapters.length === 0 ? 0 : Math.round((chaptersDone / moduleChapters.length) * 1000) / 10;
+
+      // Only a module with a measurable unit can carry a progress comparison at all.
+      const base = baseline.get(moduleId);
+      const startProgress = base && total > 0 ? base.objectiveRate : null;
+      const moduleAttempts = attempts.filter((a) => a.moduleId === moduleId);
+
       return {
         moduleId,
         code: moduleDef?.code ?? moduleId,
@@ -257,14 +509,29 @@ function moduleStats(
         completionRate: planned.length === 0 ? 0 : Math.round((completed.length / planned.length) * 1000) / 10,
         objectivesDone: done,
         objectivesTotal: total,
-        objectiveRate: total === 0 ? 0 : Math.round((done / total) * 1000) / 10,
+        objectiveRate,
         chaptersDone,
         chaptersTotal: moduleChapters.length,
-        chapterRate:
-          moduleChapters.length === 0
-            ? 0
-            : Math.round((chaptersDone / moduleChapters.length) * 1000) / 10,
-        hoursStudied: runtime?.hoursStudied ?? 0,
+        chapterRate,
+        hoursStudied,
+        startProgress,
+        endProgress: objectiveRate,
+        progressChange: startProgress === null ? null : Math.round((objectiveRate - startProgress) * 10) / 10,
+        startHours: base ? base.hoursStudied : null,
+        hoursDelta: base ? Math.round((hoursStudied - base.hoursStudied) * 10) / 10 : null,
+        tasksCompletedInPeriod: moduleTasks.filter(
+          (t) =>
+            t.status === "completed" &&
+            isWithin(toIsoDate(t.completedAt) ?? "", week.weekStart, week.weekEnd)
+        ).length,
+        quizAttemptsInPeriod: moduleAttempts.length,
+        bestQuizPercentage:
+          moduleAttempts.length === 0
+            ? null
+            : moduleAttempts.reduce((best, a) => (a.percentage > best ? a.percentage : best), 0),
+        activitiesCompleted: done,
+        activitiesRemaining: Math.max(0, total - done),
+        chaptersStudied: moduleChapters.filter((c) => c.studied).length,
       };
     })
     .sort((a, b) => a.coefficient - b.coefficient || a.code.localeCompare(b.code));
@@ -300,15 +567,27 @@ function isCompletedBy(task: TaskRef, weekEnd: IsoDate): boolean {
 }
 
 /**
- * Computes every deterministic fact for one report week.
+ * Computes every deterministic fact for one report period.
  *
- * `anchor` is the "today" the report is generated for; the week is derived from it, so a report
- * generated by the cron and one generated by hand on the same day agree.
+ * The window is passed in rather than derived, because a report may cover a custom range as well as
+ * a calendar week: every filter below is `isWithin(weekStart, weekEnd)`, so an arbitrary range
+ * produces exactly the same kind of figures over a different number of days. A report generated by
+ * the cron and one generated by hand for the same window therefore agree.
+ *
+ * `baseline` is optional and carries each module's progress as recorded by the *previous* report, so
+ * "progress at the start" is a real earlier measurement. Without it those fields stay `null`.
  */
-export function computeWeeklyMetrics(snapshot: PrvSnapshot, week: WeekWindow): WeeklyMetrics {
+export function computeWeeklyMetrics(
+  snapshot: PrvSnapshot,
+  week: WeekWindow,
+  baseline?: ReadonlyMap<string, ProgressBaseline> | ProgressBaseline[]
+): WeeklyMetrics {
   const { weekStart, weekEnd } = week;
   const tasks = snapshot.tasks ?? [];
   const refs = tasks.map((t) => toRef(t, weekEnd));
+  const baselineById = Array.isArray(baseline)
+    ? new Map(baseline.map((b) => [b.moduleId, b]))
+    : baseline ?? new Map<string, ProgressBaseline>();
 
   const planned = refs.filter((t) => t.deadline && isWithin(t.deadline, weekStart, weekEnd));
   const completed = refs.filter(
@@ -331,8 +610,11 @@ export function computeWeeklyMetrics(snapshot: PrvSnapshot, week: WeekWindow): W
     normal: bucketFor(planned.filter((t) => t.priority === "normal")),
   };
 
-  const chapters = chapterProgress(snapshot, week, refs);
-  const modules = moduleStats(snapshot, week, refs, chapters);
+  const quizAttempts = collectQuizAttempts(snapshot, week);
+  const journalEntries = (snapshot.journal ?? []).filter((e) => isWithin(e.date, weekStart, weekEnd));
+
+  const chapters = chapterProgress(snapshot, week, refs, quizAttempts);
+  const modules = moduleStats(snapshot, week, refs, chapters, quizAttempts, baselineById);
 
   const byModuleCumulative: Record<string, number> = {};
   let totalCumulative = 0;
@@ -342,29 +624,34 @@ export function computeWeeklyMetrics(snapshot: PrvSnapshot, week: WeekWindow): W
     totalCumulative += hours;
   }
 
-  const quizAttempts: Array<{ moduleId: string; chapterId: string | null; percentage: number }> = [];
-  for (const [moduleId, byChapter] of Object.entries(snapshot.chapterQuiz ?? {})) {
-    for (const [chapterId, result] of Object.entries(byChapter)) {
-      if (isWithin(toIsoDate(result.completedAt) ?? "", weekStart, weekEnd)) {
-        quizAttempts.push({ moduleId, chapterId, percentage: result.percentage });
-      }
-    }
-  }
-  for (const [moduleId, result] of Object.entries(snapshot.legacyQuiz ?? {})) {
-    if (isWithin(toIsoDate(result.completedAt) ?? "", weekStart, weekEnd)) {
-      quizAttempts.push({ moduleId, chapterId: null, percentage: result.percentage });
-    }
-  }
   const bestInWeek =
     quizAttempts.length === 0
       ? null
-      : quizAttempts.reduce((best, current) => (current.percentage > best.percentage ? current : best));
+      : quizAttempts.reduce<{ moduleId: string; chapterId: string | null; percentage: number } | null>(
+          (best, current) =>
+            best === null || current.percentage > best.percentage
+              ? { moduleId: current.moduleId, chapterId: current.chapterId, percentage: current.percentage }
+              : best,
+          null
+        );
+  const percentages = quizAttempts.map((a) => a.percentage);
+  const days = buildDayActivity(week, refs, quizAttempts, snapshot.journal ?? []);
 
-  const journalEntries = (snapshot.journal ?? []).filter((e) => isWithin(e.date, weekStart, weekEnd));
+  // Only a module that had an earlier reading can contribute a difference; with no baseline at all
+  // the sum would read 0 h and be indistinguishable from a period genuinely spent doing nothing.
+  const periodHours =
+    baselineById.size === 0 || modules.every((m) => m.hoursDelta === null)
+      ? null
+      : Math.round(modules.reduce((sum, m) => sum + (m.hoursDelta ?? 0), 0) * 10) / 10;
+
+  // Only dated records count as activity, and each is counted once: a completed task, a quiz attempt
+  // and a journal note are three separate pieces of evidence, never a weighted "effort" score.
+  const activityCount = completed.length + quizAttempts.length + journalEntries.length;
 
   return {
     weekStart,
     weekEnd,
+    periodDays: periodLength(week),
     planned,
     completed,
     completedPlanned,
@@ -378,16 +665,39 @@ export function computeWeeklyMetrics(snapshot: PrvSnapshot, week: WeekWindow): W
       openAtWeekEnd: open.length,
       completedAllTime: refs.filter((t) => t.status === "completed").length,
       createdThisWeek: refs.filter((t) => isWithin(toIsoDate(t.createdAt) ?? "", weekStart, weekEnd)).length,
+      byStatus: {
+        todo: refs.filter((t) => t.status === "todo").length,
+        in_progress: refs.filter((t) => t.status === "in_progress").length,
+        completed: refs.filter((t) => t.status === "completed").length,
+      },
     },
     completionRate:
       planned.length === 0
         ? null
         : Math.round((completedPlanned.length / planned.length) * 1000) / 10,
+    unfinishedRate:
+      planned.length === 0 ? null : Math.round((incomplete.length / planned.length) * 1000) / 10,
+    activityCount,
+    periodHours,
     byPriority,
     modules,
     chapters,
     hours: { totalCumulative, byModuleCumulative },
-    quiz: { attemptsInWeek: quizAttempts.length, bestInWeek },
+    quiz: {
+      attemptsInWeek: quizAttempts.length,
+      bestInWeek,
+      attempts: quizAttempts,
+      averagePercentage:
+        percentages.length === 0
+          ? null
+          : Math.round((percentages.reduce((sum, p) => sum + p, 0) / percentages.length) * 100) / 100,
+      bestPercentage: percentages.length === 0 ? null : Math.max(...percentages),
+      lowestPercentage: percentages.length === 0 ? null : Math.min(...percentages),
+      correctAnswers: quizAttempts.reduce((sum, a) => sum + a.correct, 0),
+      totalQuestions: quizAttempts.reduce((sum, a) => sum + a.total, 0),
+    },
+    days,
+    emptyPeriod: activityCount === 0 && planned.length === 0,
     journal: {
       entriesInWeek: journalEntries.length,
       unclear: collectUnclear(journalEntries),
@@ -395,4 +705,40 @@ export function computeWeeklyMetrics(snapshot: PrvSnapshot, week: WeekWindow): W
     },
     empty: tasks.length === 0,
   };
+}
+
+/** Flattened list of chapters with real activity in the period - the "what was studied" section. */
+export function studiedChapters(metrics: WeeklyMetrics): ChapterProgress[] {
+  return metrics.chapters.filter((chapter) => chapter.studied);
+}
+
+/** The per-module progress readings needed to compare a later period against this one. */
+export function progressBaseline(metrics: WeeklyMetrics): ProgressBaseline[] {
+  return metrics.modules
+    .filter((module) => module.objectivesTotal > 0)
+    .map((module) => ({
+      moduleId: module.moduleId,
+      objectivesDone: module.objectivesDone,
+      objectiveRate: module.objectiveRate,
+      chapterRate: module.chapterRate,
+      hoursStudied: module.hoursStudied,
+    }));
+}
+
+/**
+ * Builds the per-module baseline for a period from the reports already stored.
+ *
+ * Only reports whose period ends *before* this one starts are eligible, and the most recent wins, so
+ * the baseline is always the last real reading taken before the period opened. A report covering the
+ * same period is excluded on purpose: it would make a module look unchanged by definition.
+ */
+export function baselineFromHistory(
+  history: Array<{ weekStart: IsoDate; weekEnd: IsoDate; metrics: WeeklyMetrics }>,
+  period: WeekWindow
+): ProgressBaseline[] {
+  const previous = history
+    .filter((report) => report.weekEnd < period.weekStart)
+    .sort((a, b) => a.weekEnd.localeCompare(b.weekEnd))
+    .at(-1);
+  return previous ? progressBaseline(previous.metrics) : [];
 }

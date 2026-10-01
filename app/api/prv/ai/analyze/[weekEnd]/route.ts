@@ -9,9 +9,9 @@ import { NextResponse } from "next/server";
 
 import { analyzeWeek, buildAiBrief } from "@/lib/prv/ai.server";
 import { requirePrvAccess, isSameOrigin, unauthorized } from "@/lib/prv/guard.server";
-import { attachAi, findReportByWeek } from "@/lib/prv/reports.server";
+import { attachAi, findReport } from "@/lib/prv/reports.server";
 import { getSettings } from "@/lib/prv/settings.server";
-import { toIsoDate } from "@/lib/prv/weekly";
+import { parseReportRef } from "@/lib/prv/weekly";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,10 +30,10 @@ export async function POST(request: Request, { params }: { params: { weekEnd: st
     return NextResponse.json({ status: "disabled", interpretation: [], focus: [] });
   }
 
-  const weekEnd = toIsoDate(params.weekEnd);
-  if (!weekEnd) return NextResponse.json({ error: "Semaine invalide." }, { status: 400 });
+  const ref = parseReportRef(params.weekEnd);
+  if (!ref) return NextResponse.json({ error: "Semaine invalide." }, { status: 400 });
 
-  const report = findReportByWeek(weekEnd);
+  const report = findReport(params.weekEnd, settings);
   if (!report) return NextResponse.json({ error: "Rapport introuvable." }, { status: 404 });
 
   const analysis = await analyzeWeek(buildAiBrief(report.metrics, report.settings), report.recommendations);
@@ -42,7 +42,7 @@ export async function POST(request: Request, { params }: { params: { weekEnd: st
     return NextResponse.json(analysis, { headers: { "Cache-Control": "no-store" } });
   }
 
-  const updated = await attachAi(weekEnd, {
+  const updated = await attachAi(report.weekEnd, {
     status: analysis.status,
     interpretation: analysis.interpretation,
     focus: analysis.focus,

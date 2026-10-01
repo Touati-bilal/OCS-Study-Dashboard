@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 
 import { collectSnapshot } from "@/lib/prv/collect";
+import type { Observations } from "@/lib/prv/observations";
 import { getLastCompletedWeek, todayIso } from "@/lib/prv/weekly";
 import type { ReportSettings } from "@/lib/prv/trajectory";
 
@@ -44,13 +45,24 @@ export function usePrv() {
     []
   );
 
-  /** Generates the report for a week from the real store, read here in the browser. */
+  /**
+   * Generates a report for a period from the real store, read here in the browser.
+   *
+   * `start`/`end` name any range; omitting `weekEnd` sends the anchor as before, and omitting both
+   * asks the server for the last completed week. The snapshot is collected at click time rather than
+   * subscribed to, so the figures reflect the store exactly as it is when the button is pressed.
+   */
   const generateReport = useCallback(
-    (weekEnd?: string, settings?: ReportSettings) => {
-      const anchor = weekEnd ?? todayIso();
-      const body: Record<string, unknown> = { snapshot: collectSnapshot(), weekEnd: anchor };
-      if (settings) body.settings = settings;
-      return request<{ key: string; weekEnd: string; generation: number; empty: boolean }>(
+    (options: { start?: string; end?: string; weekEnd?: string; settings?: ReportSettings } = {}) => {
+      const body: Record<string, unknown> = { snapshot: collectSnapshot() };
+      if (options.start && options.end) {
+        body.start = options.start;
+        body.end = options.end;
+      } else {
+        body.weekEnd = options.weekEnd ?? todayIso();
+      }
+      if (options.settings) body.settings = options.settings;
+      return request<{ key: string; weekStart: string; weekEnd: string; generation: number; empty: boolean }>(
         "/api/prv/reports",
         {
           method: "POST",
@@ -68,14 +80,28 @@ export function usePrv() {
   );
 
   const getReport = useCallback(
-    (weekEnd: string) => request<Record<string, unknown>>(`/api/prv/reports/${weekEnd}`),
+    (ref: string) => request<Record<string, unknown>>(`/api/prv/reports/${encodeURIComponent(ref)}`),
+    [request]
+  );
+
+  /** Saves the owner's notes for an existing period. Nothing else about the report is recomputed. */
+  const saveReportNotes = useCallback(
+    (ref: string, observations: Observations) =>
+      request<{ key: string; observations: Observations; updatedAt: string }>(
+        `/api/prv/reports/${encodeURIComponent(ref)}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ observations }),
+        }
+      ),
     [request]
   );
 
   const analyze = useCallback(
-    (weekEnd: string) =>
+    (ref: string) =>
       request<{ status: string; interpretation: string[]; focus: string[] }>(
-        `/api/prv/ai/analyze/${weekEnd}`,
+        `/api/prv/ai/analyze/${encodeURIComponent(ref)}`,
         { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }
       ),
     [request]
@@ -101,12 +127,30 @@ export function usePrv() {
     if (typeof window !== "undefined") window.location.assign("/prv/deverrouiller");
   }, [request]);
 
-  return { busy, error, request, generateReport, listReports, getReport, analyze, proposeTasks, lock };
+  return {
+    busy,
+    error,
+    request,
+    generateReport,
+    listReports,
+    getReport,
+    saveReportNotes,
+    analyze,
+    proposeTasks,
+    lock,
+  };
 }
 
-/** The download URL for a report's PDF. It needs the opaque `downloadId`, never just the week. */
-export function pdfUrl(weekEnd: string, downloadId: string): string {
-  return `/api/prv/reports/${weekEnd}/pdf?d=${encodeURIComponent(downloadId)}`;
+/**
+ * The download URL for a report's PDF.
+ *
+ * It needs the opaque `downloadId`, never just the period: the route refuses a request without the
+ * matching id, so a URL that leaks through the history list cannot fetch anything on its own.
+ * `format=rapport` selects the structured A–F document; the default stays the weekly summary.
+ */
+export function pdfUrl(ref: string, downloadId: string, format: "rapport" | "summary" = "summary"): string {
+  const base = `/api/prv/reports/${encodeURIComponent(ref)}/pdf?d=${encodeURIComponent(downloadId)}`;
+  return format === "summary" ? base : `${base}&format=rapport`;
 }
 
 export { getLastCompletedWeek };

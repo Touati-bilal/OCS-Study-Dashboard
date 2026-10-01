@@ -6,6 +6,22 @@ The version is stored once in `lib/app-info.ts` and displayed in the app footer.
 ## V1.10-01
 
 ### Added
+- **A free-period weekly report.** The PRV `Rapports` screen is now `Rapport`, still at `/prv/rapports`, and the period is chosen with two date inputs instead of being implied by a week. The server validates both ends together (`normalisePeriod`), refusing an inverted or oversized range instead of quietly reinterpreting it, so `weekStart` and `weekEnd` can never disagree. The default still opens on the last completed week, which is why the existing browser test keeps asserting `2026-09-27`.
+- `lib/prv/rapport-pdf.server.ts`, a structured A–F PDF: cover page, the figures for the period, per-day activity, module progress, the trend with its arrow, overdue tasks, rewards and warnings, then the owner's notes. It renders on demand and is cached by report key and `updatedAt`, so a saved note invalidates it. `format=rapport` selects it; the default PDF is the original weekly layout, so an existing bookmark renders exactly what it did before.
+- A real trend arrow and a measurable explanation. `TrendArrow` reports up/flat/down from the actual percentages, and each verdict now carries the numbers that produced it instead of only a label. Rewards and warnings are derived from measured values — a rest reward from real recorded study time, an activity decline from the daily counts — and the report states plainly that no conclusion about effort, motivation or personal state is drawn from them.
+- `lib/prv/observations.ts`, six optional note fields (understood, not understood, to revise, important notes, difficult chapters, what to improve next). They are never required, are capped at 2 000 characters each, and are stored separately from the metrics. A new `PATCH /api/prv/reports/[weekEnd]` saves them and recomputes nothing, so notes cannot silently alter the figures beside them.
+- Start/end progress per module. A module's progress at the beginning of the period comes from the previous stored report, and progress at the end from the current snapshot. With no earlier report the start value is `null` and prints as `n/a` rather than being treated as zero, so a first report never claims a jump from nothing.
+- Report history in the UI: every period, its generation count, its generation timestamp, whether it is a canonical week or a custom range, and a `période personnalisée` marker on anything that is not a Sunday-to-Saturday week.
+
+### Fixed
+- A report could no longer become its own baseline. The trend and the start/end comparison are both built from `historyBefore(period)`, which excludes reports covering the same period, so regenerating a week reads the same history as generating it the first time.
+- Report status distribution in the PDF printed `-1`. It now reads `metrics.totals.byStatus`, the counts the metric engine already computes, and shows each status as its own share of the tasks actually tracked.
+
+### Changed
+- `lib/prv/reports.server.ts` is period-keyed. Saves are idempotent on the window rather than the week, so the same range updates in place and preserves `createdAt`, `downloadId` and previously written observations; the generation counter still increments so the UI can say "régénéré". Reports written by the previous version are still found by `findReportByWeek`, which resolves the stored window from their legacy `w-` key.
+- Report lookups and the PDF route accept either a week end or a period key through `parseReportRef`, and both still go through `requirePrvAccess`. A PDF request still needs the opaque `downloadId`: knowing a period exists is not enough to read it.
+
+### Added
 - `lib/owner-access.server.ts`, the authorisation gate for the two study-file APIs. It gives `/api/uploads` and `/api/module-files` a home of their own instead of importing the private area's guard, and it is the only thing those routes depend on. Verification is not reimplemented — it is the same signed, audience-scoped, expiring account token the login issues — so there is still one implementation of it. The 4-digit code is deliberately not part of it: those routes serve the module pages, not private data.
 - `STUDY_UPLOADS_DIR`, the neutral name for the uploaded-documents root, documented in `.env.example`. `PRV_UPLOADS_DIR` is still read as a fallback, so an existing environment keeps working.
 

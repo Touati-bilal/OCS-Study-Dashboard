@@ -15,8 +15,8 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 
-import { computeWeeklyMetrics } from "@/lib/prv/metrics";
-import { finalizeReport, listReports, saveReport } from "@/lib/prv/reports.server";
+import { baselineFromHistory, computeWeeklyMetrics } from "@/lib/prv/metrics";
+import { finalizeReport, historyBefore, saveReport } from "@/lib/prv/reports.server";
 import { getSettings } from "@/lib/prv/settings.server";
 import { getLatestSnapshot } from "@/lib/prv/snapshot-store.server";
 import { getLastCompletedWeek, todayIso } from "@/lib/prv/weekly";
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   }
 
   const settings = getSettings();
-  const week = getLastCompletedWeek(weekEndOverride ?? todayIso(), settings.reportDay);
+  const period = getLastCompletedWeek(weekEndOverride ?? todayIso(), settings.reportDay);
   const stored = getLatestSnapshot();
 
   if (!stored) {
@@ -67,9 +67,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const history = listReports().filter((report) => report.weekEnd !== week.weekEnd);
+  // Only earlier reports feed the trend and the start/end progress comparison, exactly as on screen.
+  const history = historyBefore(period);
+  const baseline = baselineFromHistory(history, period);
   const report = await saveReport(
-    finalizeReport(computeWeeklyMetrics(stored.snapshot, week), settings, history, null)
+    finalizeReport(computeWeeklyMetrics(stored.snapshot, period, baseline), settings, history, null)
   );
 
   // Optionally send the push; delivery is best-effort and never blocks the report.

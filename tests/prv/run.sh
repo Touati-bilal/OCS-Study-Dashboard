@@ -151,8 +151,22 @@ echo "== unit: week arithmetic =="
 npx tsx tests/prv/week.test.ts
 
 echo
+echo "== unit: free periods, period keys, legacy refs =="
+npx tsx tests/prv/period.test.ts
+
+echo
 echo "== unit: metrics, trajectory, recommendations =="
 npx tsx tests/prv/metrics.test.ts
+
+echo
+echo "== unit: observation sanitising =="
+npx tsx tests/prv/observations.test.ts
+
+# The report modules import `server-only`, which throws unless Node resolves the `react-server`
+# export condition - the same condition the Next server runs under.
+echo
+echo "== unit: the report PDF renders real bytes =="
+npx tsx --conditions=react-server tests/prv/rapport-pdf.test.ts
 
 # `config.server.ts` imports `server-only`, which throws unless Node resolves the `react-server`
 # export condition - the same condition the Next server itself runs under.

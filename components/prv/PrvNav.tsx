@@ -31,7 +31,7 @@ const SECTIONS: Section[] = [
   { href: "/prv/taches", label: "Tâches", icon: ListChecks },
   { href: "/prv/obsidian", label: "Obsidian", icon: FolderTree },
   { href: "/prv/ai", label: "IA", icon: BrainCircuit },
-  { href: "/prv/rapports", label: "Rapports", icon: BarChart3 },
+  { href: "/prv/rapports", label: "Rapport", icon: BarChart3 },
   { href: "/prv/analyse", label: "Analyse", icon: Sparkles },
   { href: "/prv/notifications", label: "Notifications", icon: Bell },
   { href: "/prv/parametres", label: "Paramètres privés", icon: Settings2 },
