@@ -22,8 +22,14 @@ import crypto from "crypto";
 /**
  * Storage root. Deliberately outside `public/`, so Next never serves these files as static assets
  * and a document dropped here can never become a same-origin script.
+ *
+ * Overridable with `PRV_UPLOADS_DIR` so a test run can be pointed at a throwaway directory. It used
+ * to be pinned to `process.cwd()/uploads`, which meant the black-box suites uploaded, deleted and
+ * asserted emptiness on the owner's *real* documents - a suite run could destroy real data.
  */
-export const UPLOADS_ROOT = path.join(process.cwd(), "uploads");
+export const UPLOADS_ROOT = path.resolve(
+  process.env.PRV_UPLOADS_DIR?.trim() || path.join(process.cwd(), "uploads")
+);
 
 export type UploadCategory = "tp" | "projects";
 
@@ -62,9 +68,21 @@ interface StoredEntry {
   uploadedAt: string;
 }
 
+/**
+ * Names already used by the storage layout itself. A `moduleId` equal to one of these would create
+ * a directory that shadows a real one: `module-files` is the *other* store's root, so accepting it
+ * here let a TP upload land inside "Les Fichiers", where it was invisible to that store's own meta
+ * and could not be listed or deleted through it.
+ */
+const RESERVED_MODULE_IDS: ReadonlySet<string> = new Set(["uploads", "module-files"]);
+
 /** True for an identifier this app is willing to turn into a directory. */
 export function isValidModuleId(moduleId: unknown): moduleId is string {
-  return typeof moduleId === "string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/.test(moduleId);
+  return (
+    typeof moduleId === "string" &&
+    /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/.test(moduleId) &&
+    !RESERVED_MODULE_IDS.has(moduleId.toLowerCase())
+  );
 }
 
 export function isCategory(v: unknown): v is UploadCategory {

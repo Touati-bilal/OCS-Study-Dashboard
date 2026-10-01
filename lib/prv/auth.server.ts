@@ -41,6 +41,12 @@ export interface AuthState {
    * the cookie captured earlier stops working. Zero means "no cutoff yet".
    */
   epoch: number;
+  /**
+   * Same idea as `epoch`, but for the 4-digit code alone. "Verrouiller" bumps this so a copy of the
+   * PRV cookie captured earlier stops working, while the owner account stays signed in: locking the
+   * private area should cost the code again, not a full re-login.
+   */
+  prvEpoch: number;
   failedAccessAttempts: number;
   lockedUntil: number | null;
   failedRecoveryAttempts: number;
@@ -53,6 +59,7 @@ function emptyAuthState(): AuthState {
   return {
     sessionSecret: "",
     epoch: 0,
+    prvEpoch: 0,
     failedAccessAttempts: 0,
     lockedUntil: null,
     failedRecoveryAttempts: 0,
@@ -128,7 +135,12 @@ export async function verifyScopedSessionToken(
   const session = await verifySessionToken(token);
   if (session === null) return null;
   // A token minted for one audience is worthless for the other.
-  return session.aud === audience ? session : null;
+  if (session.aud !== audience) return null;
+  // "Verrouiller" invalidates the code session without touching the owner account.
+  if (audience === PRV_SESSION_SCOPE && typeof session.iat === "number" && session.iat < loadAuthState().prvEpoch) {
+    return null;
+  }
+  return session;
 }
 
 export async function verifySessionToken(token: string | undefined | null): Promise<PrvSession | null> {
@@ -326,7 +338,34 @@ export async function rotateSessionEpoch(): Promise<void> {
   const now = Date.now();
   await updateCollection<AuthState>("auth-state", (items) => {
     const current = items[0] ?? emptyAuthState();
-    return [{ ...current, epoch: Math.max(now, (current.epoch ?? 0) + 1), sessionSecret: current.sessionSecret }];
+    return [
+      {
+        ...current,
+        epoch: Math.max(now, (current.epoch ?? 0) + 1),
+        prvEpoch: Math.max(now, (current.prvEpoch ?? 0) + 1),
+        sessionSecret: current.sessionSecret,
+      },
+    ];
+  });
+}
+
+/**
+ * Invalidates every session issued for the 4-digit code, leaving the owner account signed in.
+ *
+ * Without this, "Verrouiller" only asked the browser to drop the cookie: a copy of it captured
+ * earlier kept working until it expired on its own.
+ */
+export async function rotatePrvEpoch(): Promise<void> {
+  const now = Date.now();
+  await updateCollection<AuthState>("auth-state", (items) => {
+    const current = items[0] ?? emptyAuthState();
+    return [
+      {
+        ...current,
+        prvEpoch: Math.max(now, (current.prvEpoch ?? 0) + 1),
+        sessionSecret: current.sessionSecret,
+      },
+    ];
   });
 }
 

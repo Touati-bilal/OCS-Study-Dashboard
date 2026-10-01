@@ -18,8 +18,14 @@ import crypto from "crypto";
 /**
  * Storage root. Deliberately outside `public/`, so Next never serves these files as static assets
  * and a document dropped here can never become a same-origin script.
+ *
+ * Overridable with `PRV_UPLOADS_DIR`, and it must follow that directory: the two stores share one
+ * parent, so pointing only one of them elsewhere would split the owner's files across two trees.
  */
-export const MODULE_FILES_ROOT = path.join(process.cwd(), "uploads", "module-files");
+export const MODULE_FILES_ROOT = path.join(
+  path.resolve(process.env.PRV_UPLOADS_DIR?.trim() || path.join(process.cwd(), "uploads")),
+  "module-files"
+);
 
 /** Extensions accepted on upload and on download. Anything else is refused. */
 export const ALLOWED_EXTENSIONS: readonly string[] = [
@@ -48,9 +54,20 @@ interface StoredMeta {
   uploadedAt: string;
 }
 
+/**
+ * Names already used by the storage layout itself. Refused here for the same reason as in
+ * `uploads.server.ts`: a `moduleId` that names a storage root would nest one store inside the other,
+ * putting files where the other store's meta cannot see them.
+ */
+const RESERVED_MODULE_IDS: ReadonlySet<string> = new Set(["uploads", "module-files"]);
+
 /** True for an identifier this app is willing to turn into a directory. */
 export function isValidModuleId(moduleId: unknown): moduleId is string {
-  return typeof moduleId === "string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/.test(moduleId);
+  return (
+    typeof moduleId === "string" &&
+    /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/.test(moduleId) &&
+    !RESERVED_MODULE_IDS.has(moduleId.toLowerCase())
+  );
 }
 
 /** Lowercased extension, or `null` when the name has none or the extension is not allowlisted. */
@@ -118,7 +135,9 @@ export function listModuleFiles(moduleId: string): ModuleFileEntry[] {
     .map((entry) => {
       const stat = fs.statSync(path.join(dir, entry.storedName));
       return {
-        id: entry.id,
+        // The stored name, not the bare id, so this matches `/api/uploads`: one identifier that is
+        // simultaneously what a delete addresses and what the download URL contains.
+        id: entry.storedName,
         title: entry.title,
         originalName: entry.originalName,
         ext: path.extname(entry.originalName).toLowerCase(),
@@ -158,7 +177,7 @@ export function saveModuleFile(
 
   const stat = fs.statSync(path.join(dir, storedName));
   return {
-    id,
+    id: storedName,
     title: finalTitle,
     originalName: safeOriginalName,
     ext,
@@ -171,7 +190,9 @@ export function saveModuleFile(
 export function deleteModuleFile(moduleId: string, id: string): boolean {
   if (!id || id.includes("/") || id.includes("\\") || id.includes("..")) return false;
   const entries = readMeta(moduleId);
-  const idx = entries.findIndex((entry) => entry.id === id);
+  // Matched on `storedName`, which is what the API now hands out as the id. The bare `entry.id` is
+  // still accepted so documents stored before this change remain deletable.
+  const idx = entries.findIndex((entry) => entry.storedName === id || entry.id === id);
   if (idx === -1) return false;
 
   const [entry] = entries.splice(idx, 1);

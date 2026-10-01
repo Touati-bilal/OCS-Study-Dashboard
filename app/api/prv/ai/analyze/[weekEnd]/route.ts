@@ -8,7 +8,7 @@
 import { NextResponse } from "next/server";
 
 import { analyzeWeek, buildAiBrief } from "@/lib/prv/ai.server";
-import { getSessionFromRequest, isSameOrigin, unauthorized } from "@/lib/prv/guard.server";
+import { requirePrvAccess, isSameOrigin, unauthorized } from "@/lib/prv/guard.server";
 import { attachAi, findReportByWeek } from "@/lib/prv/reports.server";
 import { getSettings } from "@/lib/prv/settings.server";
 import { toIsoDate } from "@/lib/prv/weekly";
@@ -17,7 +17,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request, { params }: { params: { weekEnd: string } }) {
-  if (!(await getSessionFromRequest(request))) return unauthorized();
+  // Both cookies, like every other PRV route. This one previously checked only the 4-digit code
+  // cookie, which meant whoever held *that* cookie alone could spend AI calls and write an
+  // interpretation into a stored report without the owner account being signed in at all.
+  if (!(await requirePrvAccess(request))) return unauthorized();
   if (!(await isSameOrigin(request))) {
     return NextResponse.json({ error: "Origine refusée." }, { status: 403 });
   }

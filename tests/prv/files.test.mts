@@ -13,6 +13,11 @@
  * `resolvedTarget.startsWith(resolvedRoot)`, and "uploads-file-probe" really does start with
  * "uploads" - as does "module-files-backup" for the module-files root. Real files in real
  * directories, so a regression that brought the prefix check back would serve them.
+ *
+ * Every path here is derived from `PRV_UPLOADS_DIR`, which the runner points at a throwaway
+ * directory. The suite used to assume the project's own `uploads/`, so it uploaded into, deleted
+ * from and asserted emptiness on the owner's real documents; the section 7 assertions failed on a
+ * machine that had real files in M201, and a run could destroy them.
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -27,16 +32,18 @@ if (!USERNAME || !EMAIL || !PASSWORD) {
 }
 
 const PROJECT = process.cwd();
+/** The storage root the server actually used, which the runner redirects away from `uploads/`. */
+const UPLOADS_ROOT = path.resolve(process.env.PRV_UPLOADS_DIR?.trim() || path.join(PROJECT, "uploads"));
 const MODULE = "M201";
 const SENTINEL = "sibling-secret-must-never-be-served";
 /** A prefix-sibling of the `uploads/` root, and one of the `uploads/module-files` root. */
-const UPLOADS_SIBLING = path.join(PROJECT, "uploads-file-probe");
-const FILES_SIBLING = path.join(PROJECT, "uploads", "module-files-backup");
+const UPLOADS_SIBLING = path.join(path.dirname(UPLOADS_ROOT), "uploads-file-probe");
+const FILES_SIBLING = path.join(UPLOADS_ROOT, "module-files-backup");
 /** Where a traversal would land if containment ever broke. Unmistakable, and easy to check. */
-const OUTSIDE = path.join(PROJECT, "..", "tp-file-probe.txt");
+const OUTSIDE = path.join(path.dirname(UPLOADS_ROOT), "tp-file-probe.txt");
 const PUBLIC_PROBE = path.join(PROJECT, "public", "tp-file-probe.txt");
 /** A directory that is a *valid* module id, so the upload is allowed - but must stay inside the root. */
-const CONTAINED_DIR = path.join(PROJECT, "uploads", "uploads-file-probe", "tp");
+const CONTAINED_DIR = path.join(UPLOADS_ROOT, "uploads-file-probe", "tp");
 
 for (const dir of [UPLOADS_SIBLING, FILES_SIBLING]) {
   mkdirSync(dir, { recursive: true });
@@ -163,7 +170,7 @@ ok((moduleListed.body?.files ?? []).some((f: any) => f.id === moduleFileId), "th
 // ---------------------------------------------------------------- 3. downloads are inert
 console.log("\n== 3. a download is an attachment, never active content on our origin ==");
 
-const download = await fetch(`${BASE}/api/uploads/file/${MODULE}/tp/${encodeURIComponent(storedId)}.pdf`, { headers: AUTH });
+const download = await fetch(`${BASE}/api/uploads/file/${MODULE}/tp/${encodeURIComponent(storedId)}`, { headers: AUTH });
 eq(download.status, 200, "the owner downloads the file");
 eq(download.headers.get("content-type"), "application/octet-stream", "served as an opaque download");
 eq(download.headers.get("x-content-type-options"), "nosniff", "nosniff is set");
@@ -301,20 +308,20 @@ for (const [route, body] of [
 }
 
 ok(!(await json(`/api/uploads?moduleId=${MODULE}`, { headers: AUTH })).body?.tp?.some((f: any) => f.id === storedId), "the deleted file is gone from the list");
-ok(!existsSync(path.join(PROJECT, "uploads", MODULE, "tp", `${storedId}.pdf`)), "and gone from disk");
+ok(!existsSync(path.join(UPLOADS_ROOT, MODULE, "tp", storedId)), "and gone from disk");
 
 // ---------------------------------------------------------------- 7. cleanup
 console.log("\n== 7. the suite leaves the storage exactly as it found it ==");
 for (const done of created) await done();
 rmSync(UPLOADS_SIBLING, { recursive: true, force: true });
 rmSync(FILES_SIBLING, { recursive: true, force: true });
-rmSync(path.join(PROJECT, "uploads", "uploads-file-probe"), { recursive: true, force: true });
+rmSync(path.join(UPLOADS_ROOT, "uploads-file-probe"), { recursive: true, force: true });
 
 ok(!existsSync(UPLOADS_SIBLING) && !existsSync(FILES_SIBLING), "the prefix-sibling fixtures are removed");
-ok(!existsSync(path.join(PROJECT, "uploads", "uploads-file-probe")), "the contained module directory is removed");
+ok(!existsSync(path.join(UPLOADS_ROOT, "uploads-file-probe")), "the contained module directory is removed");
 
 // meta.json files that already existed keep their content; new ones would be empty, which is fine.
-for (const dir of [path.join(PROJECT, "uploads", MODULE, "tp"), path.join(PROJECT, "uploads", "module-files", MODULE)]) {
+for (const dir of [path.join(UPLOADS_ROOT, MODULE, "tp"), path.join(UPLOADS_ROOT, "module-files", MODULE)]) {
   if (!existsSync(dir)) continue;
   for (const name of readdirSync(dir)) {
     if (name === "meta.json") continue;

@@ -315,6 +315,26 @@ eq(detail.body.metrics.longOverdue.length, 1, "long overdue detected");
 ok(detail.body.metrics.journal.unclear.includes("le hachage"), "journal point captured");
 eq(detail.body.ai.status, "pending", "AI absent until requested");
 
+// The AI route used to verify only the 4-digit-code cookie. It must need the account cookie too,
+// otherwise holding that one cookie was enough to spend AI calls and write into a stored report.
+const analyzeBoth = { "Content-Type": "application/json", cookie: bothCookies };
+const analyzeCodeOnly = { "Content-Type": "application/json", cookie: cookie };
+const analyzeAccountOnly = { "Content-Type": "application/json", cookie: ownerCookie };
+const analyzeNoSession = { "Content-Type": "application/json" };
+const ANALYZE = "/api/prv/ai/analyze/2026-09-27";
+const analyzeOrigin = { origin: BASE };
+eq((await json(ANALYZE, { method: "POST", headers: { ...analyzeNoSession, ...analyzeOrigin } })).status, 401, "AI analyze without any session => 401");
+eq((await json(ANALYZE, { method: "POST", headers: { ...analyzeCodeOnly, ...analyzeOrigin } })).status, 401, "AI analyze with the code cookie alone => 401");
+eq((await json(ANALYZE, { method: "POST", headers: { ...analyzeAccountOnly, ...analyzeOrigin } })).status, 401, "AI analyze with the account cookie alone => 401");
+// Both cookies pass authorisation. AI is disabled in the fixtures, so the route answers without
+// calling a model - enough to show the gate was reached.
+eq((await json(ANALYZE, { method: "POST", headers: { ...analyzeBoth, ...analyzeOrigin } })).status, 200, "AI analyze with both cookies reaches the route");
+eq(
+  (await json(ANALYZE, { method: "POST", headers: { ...analyzeBoth, origin: "https://evil.example" } })).status,
+  403,
+  "AI analyze from a foreign origin => 403"
+);
+
 // ---------------------------------------------------------------- PDF authorisation
 console.log("== 7. PDF needs a session AND the unguessable download id ==");
 eq((await json("/api/prv/reports/2026-09-27/pdf")).status, 401, "PDF without session => 401");
@@ -437,10 +457,22 @@ ok((items.body.items as any[]).every((i) => i.moduleId === null || /^[A-Za-z0-9-
 
 // ---------------------------------------------------------------- lock
 console.log("== 12. locking ends the session ==");
+// Captured *before* locking, then replayed after it. `/api/prv/lock` used to clear the browser's
+// cookie, which is only a request to be polite: a cookie the caller kept would still verify,
+// because nothing in the stored state changed. So a stolen session survived a lock.
+const capturedBeforeLock = cookieFrom((await json("/api/prv/unlock", { method: "POST", headers: { "Content-Type": "application/json", cookie: ownerCookie }, body: JSON.stringify({ code: CODE }) })).response);
+ok(capturedBeforeLock.length > 0, "a session cookie is captured before the lock");
+
 const lockCookie = cookieFrom((await json("/api/prv/lock", { method: "POST", headers: auth })).response);
 ok(lockCookie.length > 0, "lock clears the cookie");
 const afterLock = await json("/api/prv/reports", { headers: { cookie: lockCookie ? `${ownerCookie}; ${lockCookie}` : `${ownerCookie}; prv_session=` } });
 eq(afterLock.status, 401, "old session no longer works after lock");
+// The replay that matters: a cookie the caller kept, plus the still-valid account cookie.
+eq(
+  (await json("/api/prv/reports", { headers: { cookie: `${ownerCookie}; ${capturedBeforeLock}` } })).status,
+  401,
+  "a captured session cookie is dead after the lock, even alongside a valid account cookie"
+);
 // Locking ends the code session but leaves the account signed in, so the page asks for the code
 // again rather than sending the visitor back to the login form.
 const pageAfterLock = await fetch(`${BASE}/prv/rapports`, {

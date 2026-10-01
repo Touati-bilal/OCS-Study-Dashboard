@@ -18,7 +18,6 @@ cd "$(dirname "$0")/../.."
 
 PORT="${PRV_TEST_PORT:-3199}"
 BASE="http://localhost:$PORT"
-DATA_DIR="$(mktemp -d)"
 LOG="$(mktemp)"
 
 CRON_SECRET=prv-test-cron-secret-0123456789
@@ -56,14 +55,89 @@ reclaim_port() {
 }
 
 cleanup() {
+  stop_server
+  reclaim_port || true
+}
+trap cleanup EXIT
+
+# Each black-box suite gets its own server, and therefore its own rate-limit buckets and its own
+# persistent lockout counters. Sharing one server across all four meant the security suite's
+# deliberate brute-force attempts counted against the browser suite's later logins: by the time the
+# browser suite signed in it had already spent the 10-attempt login budget and every correct login
+# came back 429, so the suite failed on its own exhaustible limiter rather than on a real defect.
+#
+# start_server <data-dir> <uploads-dir>
+start_server() {
+  local data_dir="$1" uploads_dir="$2"
+  PRV_CRON_SECRET="$CRON_SECRET" \
+  PRV_DATA_DIR="$data_dir" \
+  PRV_UPLOADS_DIR="$uploads_dir" \
+  AI_API_KEY=prv-test-ai-key-must-never-reach-a-browser \
+  PRV_SECRET_PEPPER="$PRV_SECRET_PEPPER" \
+  PRV_SESSION_SECRET="$PRV_SESSION_SECRET" \
+  PRV_OWNER_USERNAME="$PRV_OWNER_USERNAME" \
+  PRV_OWNER_EMAIL="$PRV_OWNER_EMAIL" \
+  PRV_OWNER_PASSWORD_HASH="$PRV_OWNER_PASSWORD_HASH" \
+  PRV_ACCESS_CODE_HASH="$PRV_ACCESS_CODE_HASH" \
+    npx next start -p "$PORT" > "$LOG" 2>&1 &
+  SERVER_PID=$!
+
+  for _ in $(seq 1 60); do
+    if curl -fsS -m 2 -o /dev/null "$BASE/" 2>/dev/null; then break; fi
+    if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+      echo "!! server exited early:" >&2
+      cat "$LOG" >&2
+      exit 1
+    fi
+    sleep 1
+  done
+
+  if ! curl -fsS -m 2 -o /dev/null "$BASE/"; then
+    echo "!! server never became ready" >&2
+    cat "$LOG" >&2
+    exit 1
+  fi
+}
+
+stop_server() {
   if [ -n "${SERVER_PID:-}" ] && kill -0 "$SERVER_PID" 2>/dev/null; then
     kill "$SERVER_PID" 2>/dev/null || true
     wait "$SERVER_PID" 2>/dev/null || true
   fi
+  SERVER_PID=""
   reclaim_port || true
-  rm -rf "$DATA_DIR"
 }
-trap cleanup EXIT
+
+# run_suite <label> <suite-file> [extra env assignments...]
+run_suite() {
+  local label="$1" file="$2"
+  shift 2
+  local data_dir uploads_dir
+  data_dir="$(mktemp -d)"
+  # The file suite used to read and write the project's own `uploads/` tree, so a test run could
+  # delete the owner's real documents. It gets a throwaway storage root instead.
+  uploads_dir="$(mktemp -d)"
+
+  echo
+  echo "== $label =="
+  start_server "$data_dir" "$uploads_dir"
+
+  set +e
+  env BASE="$BASE" PRV_TEST_CRON_SECRET="$CRON_SECRET" \
+      PRV_UPLOADS_DIR="$uploads_dir" \
+      PRV_TEST_USERNAME="$PRV_TEST_USERNAME" \
+      PRV_TEST_EMAIL="$PRV_TEST_EMAIL" \
+      PRV_TEST_PASSWORD="$PRV_TEST_PASSWORD" \
+      PRV_TEST_CODE="$PRV_TEST_CODE" \
+      "$@" \
+      npx tsx "$file"
+  local status=$?
+  set -e
+
+  stop_server
+  rm -rf "$data_dir" "$uploads_dir"
+  SUITE_STATUS=$status
+}
 
 # A leftover server would silently serve stale lockout counters and stale report generations, which
 # would make these suites report a false pass or a false failure. Reclaim the port, then insist it
@@ -96,42 +170,8 @@ if [ ! -f .next/BUILD_ID ]; then
   exit 1
 fi
 
-echo
-echo "== starting test server on port $PORT =="
-PRV_CRON_SECRET="$CRON_SECRET" \
-PRV_DATA_DIR="$DATA_DIR" \
-AI_API_KEY=prv-test-ai-key-must-never-reach-a-browser \
-PRV_SECRET_PEPPER="$PRV_SECRET_PEPPER" \
-PRV_SESSION_SECRET="$PRV_SESSION_SECRET" \
-PRV_OWNER_USERNAME="$PRV_OWNER_USERNAME" \
-PRV_OWNER_EMAIL="$PRV_OWNER_EMAIL" \
-PRV_OWNER_PASSWORD_HASH="$PRV_OWNER_PASSWORD_HASH" \
-PRV_ACCESS_CODE_HASH="$PRV_ACCESS_CODE_HASH" \
-  npx next start -p "$PORT" > "$LOG" 2>&1 &
-SERVER_PID=$!
-
-for _ in $(seq 1 60); do
-  if curl -fsS -m 2 -o /dev/null "$BASE/" 2>/dev/null; then break; fi
-  if ! curl -fsS -m 2 -o /dev/null "$BASE/" 2>/dev/null && ! kill -0 "$SERVER_PID" 2>/dev/null; then
-    echo "!! server exited early:" >&2
-    cat "$LOG" >&2
-    exit 1
-  fi
-  sleep 1
-done
-
-if ! curl -fsS -m 2 -o /dev/null "$BASE/"; then
-  echo "!! server never became ready" >&2
-  cat "$LOG" >&2
-  exit 1
-fi
-
-echo
-echo "== security: authorisation, brute force, IDOR, disclosure =="
-set +e
-BASE="$BASE" PRV_TEST_CRON_SECRET="$CRON_SECRET" npx tsx tests/prv/security.test.mts
-SECURITY_STATUS=$?
-set -e
+run_suite "security: authorisation, brute force, IDOR, disclosure" tests/prv/security.test.mts
+SECURITY_STATUS=$SUITE_STATUS
 
 if grep -q "PDF generation failed" "$LOG"; then
   echo "!! the server logged a PDF failure:" >&2
@@ -139,12 +179,8 @@ if grep -q "PDF generation failed" "$LOG"; then
   exit 1
 fi
 
-echo
-echo "== files: no session, no access; no traversal; inert downloads =="
-set +e
-BASE="$BASE" PRV_TEST_CRON_SECRET="$CRON_SECRET" npx tsx tests/prv/files.test.mts
-FILES_STATUS=$?
-set -e
+run_suite "files: no session, no access; no traversal; inert downloads" tests/prv/files.test.mts
+FILES_STATUS=$SUITE_STATUS
 
 if [ "$FILES_STATUS" -ne 0 ]; then
   echo
@@ -152,19 +188,11 @@ if [ "$FILES_STATUS" -ne 0 ]; then
   tail -20 "$LOG" >&2
 fi
 
-echo
-echo "== browser: all eight sections render, OCC isolation, lock =="
-set +e
-BASE="$BASE" npx tsx tests/prv/browser.test.mts
-BROWSER_STATUS=$?
-set -e
+run_suite "browser: all eight sections render, OCC isolation, lock" tests/prv/browser.test.mts
+BROWSER_STATUS=$SUITE_STATUS
 
-echo
-echo "== cross-exam: OCC, ORS and EGTS are untouched and never see PRV =="
-set +e
-BASE="$BASE" npx tsx tests/prv/cross-exam.test.mts
-CROSS_STATUS=$?
-set -e
+run_suite "cross-exam: OCC, ORS and EGTS are untouched and never see PRV" tests/prv/cross-exam.test.mts
+CROSS_STATUS=$SUITE_STATUS
 
 echo
 if [ "$SECURITY_STATUS" -ne 0 ]; then

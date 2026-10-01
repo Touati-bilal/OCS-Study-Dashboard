@@ -78,10 +78,15 @@ export function consumeRateLimit(key: string, limit: number, windowMs: number): 
  * direct client cannot rotate its identity by sending the header itself.
  */
 export function clientKey(request: Request, scope: string): string {
-  const forwarded = process.env.PRV_TRUST_PROXY === "1" ? request.headers.get("x-forwarded-for") : null;
+  // Both forwarding headers are attacker-controlled unless the app really sits behind a proxy that
+  // overwrites them. `x-real-ip` used to be read unconditionally, which let anyone reset their own
+  // bucket on every request and walk straight through the limiter by rotating that one header.
+  const trustProxy = process.env.PRV_TRUST_PROXY === "1";
+  const forwarded = trustProxy ? request.headers.get("x-forwarded-for") : null;
+  const realIp = trustProxy ? request.headers.get("x-real-ip") : null;
   const ip =
     forwarded?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip")?.trim() ||
+    realIp?.trim() ||
     // `request.ip` is not populated in the App Router; the socket address is not reachable either,
     // so an absent address falls back to a single shared bucket. That is stricter, not looser.
     "local";
