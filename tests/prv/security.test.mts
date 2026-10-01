@@ -108,7 +108,7 @@ for (const path of PAGES) {
   const location = response.headers.get("location") ?? "";
   // With no account session at all, the first gate is the one that is missing.
   ok(
-    response.status >= 300 && response.status < 400 && location.includes("/connexion"),
+    response.status >= 300 && response.status < 400 && location.includes("/prv/connexion"),
     `GET ${path} answers with a real redirect to the login`,
     `status ${response.status} location ${location}`
   );
@@ -489,7 +489,7 @@ ok(
 const pageAfterLockNoOwner = await fetch(`${BASE}/prv/rapports`, { redirect: "manual" });
 ok(
   (pageAfterLockNoOwner.status === 307 || pageAfterLockNoOwner.status === 302) &&
-    (pageAfterLockNoOwner.headers.get("location") ?? "").includes("/connexion"),
+    (pageAfterLockNoOwner.headers.get("location") ?? "").includes("/prv/connexion"),
   "page without any session redirects to the login",
   `status ${pageAfterLockNoOwner.status}`
 );
@@ -522,7 +522,7 @@ ok(leaked.length === 0, "no secret, password or hash literal in any client bundl
 // The login and unlock pages must not echo a credential, a hash or the pepper back into the HTML.
 for (const [path, secrets] of [
   ["/prv/deverrouiller", [CODE, "scrypt.v1.", "Mimi", CRON, ...HASHES]],
-  ["/connexion", [PASSWORD, CODE, "scrypt.v1.", ...HASHES]],
+  ["/prv/connexion", [PASSWORD, CODE, "scrypt.v1.", ...HASHES]],
 ] as Array<[string, string[]]>) {
   const html = await (await fetch(`${BASE}${path}`, { redirect: "manual" })).text();
   for (const secret of secrets) {
@@ -530,8 +530,8 @@ for (const [path, secrets] of [
   }
   // The password input is controlled, so React server-renders a `value` attribute - but it must be
   // empty. A non-empty value here would mean the page was handed the secret to begin with.
-  // Only /connexion has a password field; /prv/deverrouiller's recovery field appears on demand.
-  if (path === "/connexion") {
+  // Only /prv/connexion has a password field; /prv/deverrouiller's recovery field appears on demand.
+  if (path === "/prv/connexion") {
     const passwordInput = html.match(/<input[^>]*type="password"[^>]*>/i)?.[0] ?? "";
     const renderedValue = passwordInput.match(/\svalue="([^"]*)"/i)?.[1];
     ok(passwordInput.length > 0, `${path} has a password input`);
@@ -584,7 +584,7 @@ eq((await json("/api/prv/reports", { headers: { cookie: bothCookies } })).status
 const pageAfterSignOut = await fetch(`${BASE}/prv/rapports`, { redirect: "manual", headers: { cookie: bothCookies } });
 ok(
   (pageAfterSignOut.status === 307 || pageAfterSignOut.status === 302) &&
-    (pageAfterSignOut.headers.get("location") ?? "").includes("/connexion"),
+    (pageAfterSignOut.headers.get("location") ?? "").includes("/prv/connexion"),
   "the old cookies no longer open a page",
   `status ${pageAfterSignOut.status}`
 );

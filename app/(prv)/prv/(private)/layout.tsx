@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
 export default async function PrvPrivateLayout({ children }: { children: React.ReactNode }) {
   // Runs on the server for every request: a visit without both sessions is answered with a real 307
   // redirect, so no PRV markup, script payload or data ever leaves the server.
-  if (!(await hasOwnerSession())) redirect("/connexion");
+  if (!(await hasOwnerSession())) redirect("/prv/connexion");
   if (!(await hasPrvAccess())) redirect("/prv/deverrouiller");
   // Defence in depth, and deliberately here rather than in the outer `/prv` layout: PRV is OCS-only,
   // so a browser whose store says OCC or ORS is sent back to its own dashboard. It guards the private

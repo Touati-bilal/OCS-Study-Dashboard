@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 
-import { requireOwnerAccess, unauthorizedFiles } from "@/lib/prv/guard.server";
+import { requireOwnerAccess, unauthorizedFiles } from "@/lib/owner-access.server";
 import { resolveModuleFileForDownload } from "@/lib/moduleFiles.server";
 
 export const runtime = "nodejs";

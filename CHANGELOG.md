@@ -3,10 +3,26 @@
 All versions follow the format `V<MAJOR>.<MONTH>-<UPDATE>` (e.g. `V1.09-01` = phase 1, September, update 01).
 The version is stored once in `lib/app-info.ts` and displayed in the app footer.
 
-## Unreleased
+## V1.10-01
 
 ### Added
-- A real owner account in front of PRV. Signing in at `/connexion` takes the owner's name, their email and a password; only then is the 4-digit code asked for. The two gates are separate: each has its own signed, `httpOnly`, `SameSite=Lax` cookie with its own audience (`prv_owner` and `prv_session`), so neither cookie can be presented as the other and neither secret is ever sufficient on its own. PRV pages require both, server-side, before any markup exists.
+- `lib/owner-access.server.ts`, the authorisation gate for the two study-file APIs. It gives `/api/uploads` and `/api/module-files` a home of their own instead of importing the private area's guard, and it is the only thing those routes depend on. Verification is not reimplemented — it is the same signed, audience-scoped, expiring account token the login issues — so there is still one implementation of it. The 4-digit code is deliberately not part of it: those routes serve the module pages, not private data.
+- `STUDY_UPLOADS_DIR`, the neutral name for the uploaded-documents root, documented in `.env.example`. `PRV_UPLOADS_DIR` is still read as a fallback, so an existing environment keeps working.
+
+### Changed
+- **PRV now exists only inside `/prv`.** It has one entry point and everything behind it lives in that one tree.
+- The owner sign-in screen moved from `/connexion` to `/prv/connexion`. It is PRV's first gate and was the one piece of the private area still sitting outside it, reachable from the OCS side of the app. It stays outside the gated `(private)` group, so reaching the login never requires the session it obtains, and both server-side redirects plus `npm run prv:setup` now point at the new path.
+- The private area is no longer in the OCS navigation. The `PRV` entry is gone from the desktop sidebar and the mobile bottom bar; with every remaining item shared by all three filières, the per-item `ocsOnly` flag those two components existed to carry went with it. `/prv` is reached by typing the path. OCC and ORS already never saw it.
+- The `Documents → Fichiers` section shows one message when a write is refused: neutral wording, no link, no mention of another area of the app.
+- `PRV_UPLOADS_DIR` is documented as a fallback of `STUDY_UPLOADS_DIR` rather than the primary name, in the code and in the test runner.
+
+### Removed
+- **Every PRV trace outside the PRV area.** `SignInToManageFiles` — the "Connectez-vous pour importer ou supprimer des fichiers" banner with a link to the private login — is gone from `FilesSection`, `DocumentsSection` and `TpProjectsSection`. It was rendered three times over and it was the reason M202 → Files/Documents showed a private-area sign-in. The 401 it existed to explain now falls back to the section's own empty state. Uploads, downloads and deletes are untouched: they still require the signed-in account, they just no longer advertise where to get one.
+- The `(auth)` route group. `/connexion` was its only route; the group is gone with it, leaving `(main)` and `(prv)` as the two root layouts.
+- The dead `requireOwnerAccess` / `unauthorizedFiles` exports from the private area's guard, now that the study-file routes use their own.
+
+### Added
+- A real owner account in front of PRV. Signing in at `/prv/connexion` takes the owner's name, their email and a password; only then is the 4-digit code asked for. The two gates are separate: each has its own signed, `httpOnly`, `SameSite=Lax` cookie with its own audience (`prv_owner` and `prv_session`), so neither cookie can be presented as the other and neither secret is ever sufficient on its own. PRV pages require both, server-side, before any markup exists.
 - `npm run prv:setup`, which writes the account and the code to `.env.local` as hashes. It prompts with the input hidden, confirms the password, generates the pepper and the session-signing key, and writes the file with mode `600` (already git-ignored). Re-running it is how the password or the code is changed. It also offers to set a private recovery phrase, hashed the same way as the other two credentials.
 - The password and the code are now stored as peppered `scrypt.v1.<salt>.<hash>` values. The separator is a dot because the environment-file loader expands `$VAR` inside values, so a `scrypt$v1$...` value was silently truncated to `scrypt` and could never verify; the setup script now re-reads the file it wrote with the real loader and re-verifies all three secrets against it, so that class of bug cannot come back. The scrypt input is an HMAC keyed with `PRV_SECRET_PEPPER`, which lives only in the server environment. This matters most for the 4-digit code: there are only 10 000 of them, so an unpeppered hash would be exhausted in seconds. The pepper is required — if it is absent, PRV reports itself unconfigured rather than quietly verifying against something weak.
 - Brute-force protection on both gates: ten attempts per five minutes per client, in front of a persistent budget — five wrong passwords lock the account for 15 minutes, three wrong codes lock the code for 15 minutes. A burst is absorbed by the rate limiter before any hashing happens, so a script cannot spend the server's CPU on guesses.
@@ -16,7 +32,7 @@ The version is stored once in `lib/app-info.ts` and displayed in the app footer.
 - `PRV_ACCESS_CODE`, a plaintext environment variable, is no longer read at all. The code is `PRV_ACCESS_CODE_HASH` now, and the account adds `PRV_OWNER_USERNAME`, `PRV_OWNER_EMAIL` and `PRV_OWNER_PASSWORD_HASH`.
 - Every protected API route, including the report PDF, now requires the account session as well as the code session. Previously the endpoints checked the code cookie alone, which would have made the account pointless: a copy of that one cookie, or the recovery phrase, would have reached every private endpoint on its own.
 - Signing out now actually ends the session. It used to ask the browser to drop the cookies and nothing more, so a cookie captured beforehand stayed valid for its full 12 hours; a server-side cutoff timestamp now invalidates every token issued before the sign-out.
-- `/connexion` moved out of the dashboard's route group into its own. It was rendering behind the app shell, which shows nothing until the browser has hydrated and then asks a first-time visitor to choose a filière — so a redirect out of PRV could land on the exam chooser instead of the sign-in form. The screen is now a standalone page with no sidebar and no onboarding in front of it.
+- `/connexion` moved out of the dashboard's route group into its own. It was rendering behind the app shell, which shows nothing until the browser has hydrated and then asks a first-time visitor to choose a filière — so a redirect out of PRV could land on the exam chooser instead of the sign-in form. The screen is now a standalone page with no sidebar and no onboarding in front of it. (It has since moved again, to `/prv/connexion`, so that the whole private area is one tree.)
 
 ### Removed
 - The `Préparation` area, taken out of the web app: the sidebar entry, the mobile entry, the tab inside every OCS module, the hub page and the module cards. `/preparation` is no longer a route. Nothing was deleted from any Obsidian vault and the Obsidian integration itself is untouched.

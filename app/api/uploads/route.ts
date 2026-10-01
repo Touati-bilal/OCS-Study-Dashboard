@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireOwnerAccess, unauthorizedFiles } from "@/lib/prv/guard.server";
+import { requireOwnerAccess, unauthorizedFiles } from "@/lib/owner-access.server";
 import {
   MAX_UPLOAD_BYTES,
   deleteUpload,

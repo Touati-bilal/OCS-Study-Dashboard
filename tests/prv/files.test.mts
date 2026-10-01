@@ -14,7 +14,7 @@
  * "uploads" - as does "module-files-backup" for the module-files root. Real files in real
  * directories, so a regression that brought the prefix check back would serve them.
  *
- * Every path here is derived from `PRV_UPLOADS_DIR`, which the runner points at a throwaway
+ * Every path here is derived from `STUDY_UPLOADS_DIR`, which the runner points at a throwaway
  * directory. The suite used to assume the project's own `uploads/`, so it uploaded into, deleted
  * from and asserted emptiness on the owner's real documents; the section 7 assertions failed on a
  * machine that had real files in M201, and a run could destroy them.
@@ -33,7 +33,7 @@ if (!USERNAME || !EMAIL || !PASSWORD) {
 
 const PROJECT = process.cwd();
 /** The storage root the server actually used, which the runner redirects away from `uploads/`. */
-const UPLOADS_ROOT = path.resolve(process.env.PRV_UPLOADS_DIR?.trim() || path.join(PROJECT, "uploads"));
+const UPLOADS_ROOT = path.resolve(process.env.STUDY_UPLOADS_DIR?.trim() || path.join(PROJECT, "uploads"));
 const MODULE = "M201";
 const SENTINEL = "sibling-secret-must-never-be-served";
 /** A prefix-sibling of the `uploads/` root, and one of the `uploads/module-files` root. */

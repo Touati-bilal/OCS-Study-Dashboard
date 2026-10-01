@@ -19,11 +19,14 @@ import crypto from "crypto";
  * Storage root. Deliberately outside `public/`, so Next never serves these files as static assets
  * and a document dropped here can never become a same-origin script.
  *
- * Overridable with `PRV_UPLOADS_DIR`, and it must follow that directory: the two stores share one
+ * Overridable with `STUDY_UPLOADS_DIR`, and it must follow that directory: the two stores share one
  * parent, so pointing only one of them elsewhere would split the owner's files across two trees.
+ * `PRV_UPLOADS_DIR` is still read as a fallback, so an existing environment keeps working.
  */
 export const MODULE_FILES_ROOT = path.join(
-  path.resolve(process.env.PRV_UPLOADS_DIR?.trim() || path.join(process.cwd(), "uploads")),
+  path.resolve(
+    process.env.STUDY_UPLOADS_DIR?.trim() || process.env.PRV_UPLOADS_DIR?.trim() || path.join(process.cwd(), "uploads")
+  ),
   "module-files"
 );
 

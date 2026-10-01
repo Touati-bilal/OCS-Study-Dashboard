@@ -71,7 +71,7 @@ start_server() {
   local data_dir="$1" uploads_dir="$2"
   PRV_CRON_SECRET="$CRON_SECRET" \
   PRV_DATA_DIR="$data_dir" \
-  PRV_UPLOADS_DIR="$uploads_dir" \
+  STUDY_UPLOADS_DIR="$uploads_dir" \
   AI_API_KEY=prv-test-ai-key-must-never-reach-a-browser \
   PRV_SECRET_PEPPER="$PRV_SECRET_PEPPER" \
   PRV_SESSION_SECRET="$PRV_SESSION_SECRET" \
@@ -124,7 +124,7 @@ run_suite() {
 
   set +e
   env BASE="$BASE" PRV_TEST_CRON_SECRET="$CRON_SECRET" \
-      PRV_UPLOADS_DIR="$uploads_dir" \
+      STUDY_UPLOADS_DIR="$uploads_dir" \
       PRV_TEST_USERNAME="$PRV_TEST_USERNAME" \
       PRV_TEST_EMAIL="$PRV_TEST_EMAIL" \
       PRV_TEST_PASSWORD="$PRV_TEST_PASSWORD" \

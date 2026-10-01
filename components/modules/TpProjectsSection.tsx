@@ -2,7 +2,6 @@
 
 import { useModuleUploads, type UploadedFile } from "@/hooks/useModuleUploads";
 import { Card } from "@/components/ui/Card";
-import { SignInToManageFiles } from "@/components/modules/SignInToManageFiles";
 import {
   FileText,
   FileType2,
@@ -40,12 +39,11 @@ function formatDate(iso: string): string {
 }
 
 export function TpProjectsSection({ moduleId }: { moduleId: string }) {
-  const { tp, projects, loading, uploading, authRequired, upload, remove, tpInputRef, projectInputRef } =
+  const { tp, projects, loading, uploading, upload, remove, tpInputRef, projectInputRef } =
     useModuleUploads(moduleId);
 
   return (
     <div className="flex flex-col gap-4">
-      {authRequired && <SignInToManageFiles />}
       <UploadGroup
         title="TP"
         icon={FlaskConical}

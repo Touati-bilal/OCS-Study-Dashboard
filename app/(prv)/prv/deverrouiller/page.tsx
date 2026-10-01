@@ -10,7 +10,7 @@ import { FieldGroup, Input, Label } from "@/components/ui/Field";
 
 /**
  * The PRV unlock screen: the second of two gates, entered only after the owner account is signed in
- * at /connexion. The 4-digit code is checked server-side against a peppered scrypt hash; it is never
+ * at /prv/connexion. The 4-digit code is checked server-side against a peppered scrypt hash; it is never
  * stored in plaintext, never logged and never sent back to the browser.
  *
  * Nothing here reveals whether a digit was correct or how many attempts are left: the server
@@ -46,7 +46,7 @@ function UnlockForm() {
         }
         // The code is the second gate: without the account session there is nothing to unlock.
         if (!status.ownerAuthenticated) {
-          router.replace(destination && destination.startsWith("/prv") ? `${destination}?suite=${encodeURIComponent(destination)}` : "/connexion");
+          router.replace(destination && destination.startsWith("/prv") ? `${destination}?suite=${encodeURIComponent(destination)}` : "/prv/connexion");
           return;
         }
         if (!status.configured) {

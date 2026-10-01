@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/Card";
-import { SignInToManageFiles } from "@/components/modules/SignInToManageFiles";
 import {
   FileText,
   FileType2,
@@ -71,17 +70,20 @@ export function FilesSection({
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<PendingFile[]>([]);
   const [saving, setSaving] = useState(false);
-  // The route requires the signed-in account; say so rather than showing an unexplained empty list.
-  const [authRequired, setAuthRequired] = useState(false);
+  /**
+   * A write the storage refused. Wording is deliberately neutral: the section explains itself
+   * without pointing anywhere, so no module page carries a reference to another area of the app.
+   */
+  const [uploadFailed, setUploadFailed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(async () => {
     const res = await fetch(`/api/module-files?moduleId=${encodeURIComponent(moduleId)}`);
     if (res.status === 401) {
-      setAuthRequired(true);
+      // The route is gated on a signed-in account. Nothing about that gate belongs on a module
+      // page, so the section simply shows its empty state and stays silent.
       setFiles([]);
     } else if (res.ok) {
-      setAuthRequired(false);
       const data = await res.json();
       setFiles(data.files ?? []);
     }
@@ -113,17 +115,21 @@ export function FilesSection({
   async function confirmUpload() {
     if (pending.length === 0) return;
     setSaving(true);
+    let stored = 0;
     for (const p of pending) {
       const formData = new FormData();
       formData.append("moduleId", moduleId);
       formData.append("title", p.title);
       formData.append("file", p.file);
+      // A refused write simply leaves that file out. Nothing about the reason is surfaced here:
+      // the section reports the outcome and points nowhere.
       const res = await fetch("/api/module-files", { method: "POST", body: formData });
-      if (res.status === 401) setAuthRequired(true);
+      if (res.ok) stored += 1;
     }
     setPending([]);
     setSaving(false);
     await refresh();
+    if (stored === 0) setUploadFailed(true);
   }
 
   async function handleDelete(id: string) {
@@ -137,13 +143,15 @@ export function FilesSection({
 
   return (
     <div className="flex flex-col gap-4">
-      {authRequired && <SignInToManageFiles />}
       <div className="flex items-center justify-between">
         <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink/40">
           <FolderOpen size={13} className="text-brand-400" /> {title}
         </p>
         <button
-          onClick={() => inputRef.current?.click()}
+          onClick={() => {
+            setUploadFailed(false);
+            inputRef.current?.click();
+          }}
           className="flex items-center gap-1 rounded-full bg-brand-400/20 px-2.5 py-1 text-[11px] font-medium text-brand-400"
         >
           <UploadCloud size={12} /> Importer
@@ -191,6 +199,12 @@ export function FilesSection({
             {saving ? "Enregistrement..." : `Enregistrer ${pending.length} fichier${pending.length > 1 ? "s" : ""}`}
           </button>
         </Card>
+      )}
+
+      {uploadFailed && (
+        <p className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[11px] text-ink/60">
+          Aucun fichier n&apos;a pu être enregistré.
+        </p>
       )}
 
       {!loading && files.length === 0 && pending.length === 0 && (

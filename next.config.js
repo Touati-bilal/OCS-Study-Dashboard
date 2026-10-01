@@ -3,9 +3,9 @@
 /**
  * Security headers applied to every response.
  *
- * The app serves private study data (PRV reports, uploaded documents) and an account login, so the
- * browser needs to be told not to sniff content types, not to frame the app (clickjacking on the
- * code screen), and not to leak the URL of a private page to a third party.
+ * The app serves private study data (uploaded documents, the private area's reports) and an account
+ * login, so the browser needs to be told not to sniff content types, not to frame the app
+ * (clickjacking on the code screen), and not to leak the URL of a private page to a third party.
  *
  * The Content-Security-Policy deliberately covers only the directives that cannot break this app:
  * `frame-ancestors`, `base-uri`, `object-src` and `form-action`. A `script-src` directive is left

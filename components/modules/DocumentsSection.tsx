@@ -20,7 +20,6 @@ import type { MaterialGroup } from "@/lib/materials.server";
 import type { ActivityGroup } from "@/lib/activities.server";
 import { cn } from "@/lib/utils";
 import { BookOpen, FlaskConical, FolderKanban, UploadCloud } from "lucide-react";
-import { SignInToManageFiles } from "@/components/modules/SignInToManageFiles";
 
 const SECTION_ICON: Record<DocumentSectionId, React.ElementType> = {
   cours: BookOpen,
@@ -55,7 +54,7 @@ export function DocumentsSection({
   const [section, setSection] = useState<DocumentSectionId>("cours");
   const [progerSection, setProgerSection] = useState<ProgerSectionId>("tp");
 
-  const { tp, projects, loading, uploading, authRequired, upload, remove, tpInputRef, projectInputRef } =
+  const { tp, projects, loading, uploading, upload, remove, tpInputRef, projectInputRef } =
     useModuleUploads(moduleId);
 
   const { coursGroups, tpGroup } = useMemo(() => splitModuleDocuments(materialGroups), [materialGroups]);
@@ -101,14 +100,11 @@ export function DocumentsSection({
         {section === "activites" && <ActivitiesSection groups={activityGroups} color={color} />}
 
         {section === "fichiers" && (
-          <>
-            {authRequired && <SignInToManageFiles />}
-            <FilesSection
-              moduleId={moduleId}
-              title="Fichiers / Updates"
-              emptyLabel="Aucun fichier ajouté. Les documents communiqués plus tard se retrouveront ici."
-            />
-          </>
+          <FilesSection
+            moduleId={moduleId}
+            title="Fichiers / Updates"
+            emptyLabel="Aucun fichier ajouté. Les documents communiqués plus tard se retrouveront ici."
+          />
         )}
 
         {section === "proger" && (

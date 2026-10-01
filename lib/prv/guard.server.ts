@@ -1,9 +1,14 @@
 /**
  * Server-side gate for every PRV API route.
  *
- * Each route calls `requirePrvSession` first and returns its 401 immediately when it fails, so an
+ * Each route calls `requirePrvAccess` first and returns its 401 immediately when it fails, so an
  * unauthorised request never reaches any PRV business logic. This is the single place that
- * decides access, which is what keeps a new route from accidentally shipping unprotected.
+ * decides access to PRV, which is what keeps a new PRV route from accidentally shipping
+ * unprotected.
+ *
+ * This file is PRV's own boundary. Routes that are not PRV - the study-file APIs behind the OCS
+ * module pages - are gated in `lib/owner-access.server.ts` instead, so nothing outside the `/prv`
+ * tree depends on this module.
  */
 import "server-only";
 
@@ -21,17 +26,12 @@ import { OWNER_COOKIE, OWNER_SESSION_SCOPE } from "./owner.server";
 export { PRV_COOKIE, OWNER_COOKIE };
 
 /**
- * Uniform 401 body. It never says whether a session existed, only that it did not - so it cannot be
- * used to probe which cookies a caller holds. The wording is configurable because this is now also
- * the gate on the study-file APIs, which are not PRV.
+ * Uniform 401 body for the PRV routes. It never says whether a session existed, only that it did
+ * not - so it cannot be used to probe which cookies a caller holds. The study-file routes are not
+ * PRV and have their own gate in `lib/owner-access.server.ts`.
  */
 export function unauthorized(message = "Accès PRV refusé."): NextResponse {
   return NextResponse.json({ error: message }, { status: 401 });
-}
-
-/** The 401 used by the study-file routes: same shape, no PRV wording. */
-export function unauthorizedFiles(): NextResponse {
-  return unauthorized("Connectez-vous pour gérer vos fichiers.");
 }
 
 /** Reads a named cookie from the request header, falling back to the server-side store. */
@@ -94,12 +94,9 @@ export async function requirePrvAccess(request: Request): Promise<boolean> {
 /**
  * Requires the signed-in owner account, without requiring the 4-digit PRV code.
  *
- * This is the gate for the study-file APIs (`/api/uploads`, `/api/module-files`). They used to have
- * no authorisation at all, which let anyone who could reach the app list, read, overwrite and
- * delete the owner's files, and - because `moduleId` was joined into a path unchecked - write
- * anywhere on the filesystem. The owner account is the authorisation this app already has, so
- * requiring it is the smallest change that closes the hole; the 4-digit code stays the extra gate
- * for PRV's own private data, which is what the user is more protective of.
+ * Used by PRV's own API routes that act on the account rather than on private data - the sign-out
+ * endpoint, which must stay reachable when only the account session is open. The study-file routes
+ * use `lib/owner-access.server.ts` instead, which keeps this file scoped to PRV.
  */
 export async function requireOwnerAccess(request: Request): Promise<boolean> {
   return (await getOwnerSessionFromRequest(request)) !== null;

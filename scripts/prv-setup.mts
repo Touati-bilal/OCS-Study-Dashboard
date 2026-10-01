@@ -301,7 +301,7 @@ async function runAuto(argv: string[]) {
   console.log(`PRV Recovery: ${recovery}`);
   console.log("=== fin ===");
   console.log("\nRelancez le serveur pour que les variables soient lues : npm run dev");
-  console.log("Puis ouvrez http://localhost:3000/connexion");
+  console.log("Puis ouvrez http://localhost:3000/prv/connexion");
 }
 
 async function main() {
@@ -409,7 +409,7 @@ async function main() {
   }
   console.log("\nRelancez le serveur pour que les variables soient lues :");
   console.log("  npm run dev");
-  console.log("\nEnsuite : http://localhost:3000/connexion");
+  console.log("\nEnsuite : http://localhost:3000/prv/connexion");
 }
 
 main().catch((error) => {

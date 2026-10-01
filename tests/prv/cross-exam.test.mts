@@ -63,7 +63,7 @@ for (const exam of EXAMS) {
     ok(response?.status() === 200, `${exam.option} module ${moduleId} still resolves`, String(response?.status()));
   }
 
-  // The PRV entry point must not be offered to another exam.
+  // No exam's navigation may offer the private area.
   await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
   await page.waitForTimeout(500);
   const nav = await page.locator('a[href="/prv"]').count();
@@ -84,7 +84,8 @@ for (const exam of EXAMS) {
   await ctx.close();
 }
 
-// The OCS side: PRV exists in the navigation, and stays absent for everyone else.
+// The OCS side: PRV has no presence in the OCS navigation either. It is reached by typing /prv,
+// and the area itself still enforces the OCS-only rule on the server.
 const ocs = await browser.newContext();
 await ocs.addInitScript(() => {
   window.localStorage.setItem(
@@ -95,9 +96,35 @@ await ocs.addInitScript(() => {
 const ocsPage = await ocs.newPage();
 await ocsPage.goto(`${BASE}/`, { waitUntil: "networkidle" });
 await ocsPage.waitForTimeout(600);
-ok((await ocsPage.locator('a[href="/prv"]').count()) > 0, "OCS does see the PRV link");
-const prvHref = await ocsPage.locator('a[href="/prv"]').first().getAttribute("href");
-ok(prvHref === "/prv", "the PRV link points at /prv", String(prvHref));
+ok((await ocsPage.locator('a[href="/prv"]').count()) === 0, "OCS sees no PRV link either");
+
+// No OCS screen may name the private area: home, modules, a module page and planning.
+for (const route of ["/", "/modules", "/modules/M201", "/planning", "/secondary"]) {
+  await ocsPage.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
+  await ocsPage.waitForTimeout(400);
+  const body = (await ocsPage.textContent("body")) ?? "";
+  ok(!/PRV/i.test(body), `${route} shows no PRV reference`, body.match(/.{0,30}PRV.{0,30}/i)?.[0] ?? "");
+}
+
+// The same for OCC and ORS, which must not have been affected.
+for (const option of ["OCC", "ORS"]) {
+  const ctx = await browser.newContext();
+  await ctx.addInitScript((opt) => {
+    window.localStorage.setItem(
+      "ocs-study-dashboard",
+      JSON.stringify({ state: { theme: "black", studyOption: opt, tasks: [], modules: {}, chapterQuizResults: {}, quizResults: {}, journalEntries: [] }, version: 0 })
+    );
+  }, option);
+  const pg = await ctx.newPage();
+  for (const route of ["/", "/modules", "/planning"]) {
+    await pg.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
+    await pg.waitForTimeout(400);
+    const body = (await pg.textContent("body")) ?? "";
+    ok(!/PRV/i.test(body), `${option} ${route} shows no PRV reference`, body.match(/.{0,30}PRV.{0,30}/i)?.[0] ?? "");
+  }
+  await ctx.close();
+}
+
 await ocs.close();
 
 console.log(`\n${pass} passed, ${fail} failed`);

@@ -82,7 +82,7 @@ console.log("== signing in with username + email + password ==");
 const virginCtx = await browser.newContext();
 const virgin = await virginCtx.newPage();
 watch(virgin, "session (first visit)");
-await virgin.goto(`${BASE}/connexion`, { waitUntil: "networkidle" });
+await virgin.goto(`${BASE}/prv/connexion`, { waitUntil: "networkidle" });
 ok(await virgin.locator("#prv-username").isVisible().catch(() => false), "the sign-in form is reachable on a first visit, before any filière is chosen");
 ok((await virgin.innerText("body")).includes("Choisis ta filière") === false, "the filière chooser does not stand in the way of signing in");
 
@@ -105,14 +105,14 @@ ok(true, "the code opens PRV from a first visit", virgin.url());
 await virginCtx.close();
 
 await page.goto(`${BASE}/prv/rapports`, { waitUntil: "networkidle" });
-ok(page.url().includes("/connexion"), "a protected URL bounces to the login screen", page.url());
+ok(page.url().includes("/prv/connexion"), "a protected URL bounces to the login screen", page.url());
 
 // The code alone is not a way in: the login screen must come first.
 await page.goto(`${BASE}/prv/deverrouiller`, { waitUntil: "networkidle" });
 await page.waitForTimeout(1500);
-ok(page.url().includes("/connexion"), "the code screen is unreachable before signing in", page.url());
+ok(page.url().includes("/prv/connexion"), "the code screen is unreachable before signing in", page.url());
 
-await page.goto(`${BASE}/connexion`, { waitUntil: "networkidle" });
+await page.goto(`${BASE}/prv/connexion`, { waitUntil: "networkidle" });
 await page.waitForSelector("#prv-username", { timeout: 20000 });
 ok(true, "the login form is reachable and interactive");
 
@@ -128,7 +128,7 @@ for (const wrong of ["not-the-password", "still-not-it"]) {
   if (alert) rejections.push(alert.trim());
 }
 ok(rejections.length === 2 && rejections[0] === rejections[1], "a wrong password is refused with one identical message", rejections.join(" / "));
-ok(page.url().includes("/connexion"), "a wrong password does not sign you in", page.url());
+ok(page.url().includes("/prv/connexion"), "a wrong password does not sign you in", page.url());
 ok(
   !(await (await ctx.cookies()).some((c) => c.name === "prv_owner")),
   "a wrong password sets no owner cookie"
@@ -289,7 +289,14 @@ await occCtx.addInitScript(() => {
 const occPage = await occCtx.newPage();
 await occPage.goto(`${BASE}/prv`, { waitUntil: "networkidle" });
 await occPage.waitForTimeout(1200);
-ok(!occPage.url().includes("/prv") || occPage.url().includes("deverrouiller"), "an OCC user is bounced off /prv", occPage.url());
+// The login lives inside /prv now, so "the URL is not under /prv" is no longer the test. What must
+// hold is that no OCC browser ever reaches one of the eight protected sections: it is sent to the
+// login instead, and the OCS-only gate would take it out again even if it got past that. The
+// comparison is exact on purpose — /prv/connexion and /prv/deverrouiller are gates, not sections,
+// and none of the eight sections has a sub-route of its own.
+const occPath = new URL(occPage.url()).pathname;
+ok(!SECTIONS.includes(occPath), "an OCC user is bounced off /prv", occPage.url());
+ok(occPath === "/prv/connexion" || occPath === "/prv/deverrouiller", "and lands on a gate, not on a section", occPath);
 await occCtx.close();
 
 console.log(`\n${pass} passed, ${fail} failed`);

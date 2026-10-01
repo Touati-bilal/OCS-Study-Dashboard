@@ -23,12 +23,15 @@ import crypto from "crypto";
  * Storage root. Deliberately outside `public/`, so Next never serves these files as static assets
  * and a document dropped here can never become a same-origin script.
  *
- * Overridable with `PRV_UPLOADS_DIR` so a test run can be pointed at a throwaway directory. It used
+ * Overridable with `STUDY_UPLOADS_DIR` so a test run can be pointed at a throwaway directory. It used
  * to be pinned to `process.cwd()/uploads`, which meant the black-box suites uploaded, deleted and
  * asserted emptiness on the owner's *real* documents - a suite run could destroy real data.
+ * `PRV_UPLOADS_DIR` is still read as a fallback, so an existing environment keeps working.
  */
 export const UPLOADS_ROOT = path.resolve(
-  process.env.PRV_UPLOADS_DIR?.trim() || path.join(process.cwd(), "uploads")
+  process.env.STUDY_UPLOADS_DIR?.trim() ||
+    process.env.PRV_UPLOADS_DIR?.trim() ||
+    path.join(process.cwd(), "uploads")
 );
 
 export type UploadCategory = "tp" | "projects";

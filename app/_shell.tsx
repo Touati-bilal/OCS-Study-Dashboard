@@ -55,9 +55,10 @@ try {
  *
  * The app deliberately has *two* root layouts - one per route group - because `AppShell` renders
  * only a loading spinner until the browser has hydrated. Anything inside it is never server
- * rendered, so a server component placed under it cannot authorise a request. PRV needs the
- * opposite: an authorisation check that runs before any markup exists. Keeping the document shell
- * here lets each group choose its own body without duplicating fonts, metadata or the theme script.
+ * rendered, so a server component placed under it cannot authorise a request. The private area
+ * needs the opposite: an authorisation check that runs before any markup exists. Keeping the
+ * document shell here lets each group choose its own body without duplicating fonts, metadata or
+ * the theme script.
  */
 export function RootShell({ children }: { children: React.ReactNode }) {
   return (

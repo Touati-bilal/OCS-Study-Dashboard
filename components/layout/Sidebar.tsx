@@ -4,29 +4,30 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { LayoutDashboard, ShieldCheck, Layers, CalendarClock, LifeBuoy, ExternalLink, Lock } from "lucide-react";
+import { LayoutDashboard, ShieldCheck, Layers, CalendarClock, LifeBuoy, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HELP_URL } from "@/lib/help";
 import { APP_NAME, APP_VERSION_LABEL } from "@/lib/app-info";
-import { useAppStore } from "@/store/useAppStore";
 import { ThemeToggle } from "./ThemeToggle";
 
+/**
+ * The OCS navigation.
+ *
+ * PRV is deliberately absent. It is a separate, separately authenticated area at `/prv`, reached by
+ * typing that path; no OCS screen links to it, so the private area has no presence in the dashboard
+ * navigation, in a module page or in the OCS API.
+ */
 const NAV_ITEMS = [
-  { href: "/", label: "Accueil", icon: LayoutDashboard, ocsOnly: false },
-  { href: "/modules", label: "Modules", icon: ShieldCheck, ocsOnly: false },
-  { href: "/secondary", label: "EGTS", icon: Layers, ocsOnly: false },
-  { href: "/planning", label: "Planning", icon: CalendarClock, ocsOnly: false },
-  // PRV is OCS-only and separately authenticated: the link is hidden for OCC / ORS, and the pages
-  // themselves re-check the session on the server.
-  { href: "/prv", label: "PRV", icon: Lock, ocsOnly: true },
+  { href: "/", label: "Accueil", icon: LayoutDashboard },
+  { href: "/modules", label: "Modules", icon: ShieldCheck },
+  { href: "/secondary", label: "EGTS", icon: Layers },
+  { href: "/planning", label: "Planning", icon: CalendarClock },
 ];
 
 const HELP_ITEM = { href: HELP_URL, label: "Help", icon: LifeBuoy, external: true };
 
 export function Sidebar() {
   const pathname = usePathname();
-  const studyOption = useAppStore((s) => s.studyOption);
-  const items = NAV_ITEMS.filter((item) => !item.ocsOnly || studyOption === "OCS");
 
   return (
     <aside className="relative z-10 hidden w-60 shrink-0 flex-col border-r border-ink/8 bg-paper lg:w-64 md:flex">
@@ -41,7 +42,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 px-3">
-        {items.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           const Icon = item.icon;
           return (

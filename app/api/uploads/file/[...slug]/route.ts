@@ -13,7 +13,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireOwnerAccess, unauthorizedFiles } from "@/lib/prv/guard.server";
+import { requireOwnerAccess, unauthorizedFiles } from "@/lib/owner-access.server";
 import { resolveUploadFileForDownload } from "@/lib/uploads.server";
 import fs from "fs";
 

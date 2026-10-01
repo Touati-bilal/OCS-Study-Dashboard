@@ -25,20 +25,17 @@ export function useModuleUploads(moduleId: string) {
   const [projects, setProjects] = useState<UploadedFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState<UploadCategory | null>(null);
-  // The file APIs require the signed-in owner account, so the section says so instead of silently
-  // showing an empty list.
-  const [authRequired, setAuthRequired] = useState(false);
   const tpInputRef = useRef<HTMLInputElement>(null);
   const projectInputRef = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(async () => {
     const res = await fetch(`/api/uploads?moduleId=${encodeURIComponent(moduleId)}`);
     if (res.status === 401) {
-      setAuthRequired(true);
+      // The file routes are gated on a signed-in account. That gate is deliberately not surfaced
+      // here: the section falls back to its empty state and says nothing about it.
       setTp([]);
       setProjects([]);
     } else if (res.ok) {
-      setAuthRequired(false);
       const data = await res.json();
       setTp(data.tp ?? []);
       setProjects(data.projects ?? []);
@@ -62,12 +59,11 @@ export function useModuleUploads(moduleId: string) {
   }
 
   async function remove(category: UploadCategory, id: string) {
-    const res = await fetch("/api/uploads", {
+    await fetch("/api/uploads", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ moduleId, category, id }),
     });
-    if (res.status === 401) setAuthRequired(true);
     await refresh();
   }
 
@@ -76,7 +72,6 @@ export function useModuleUploads(moduleId: string) {
     projects,
     loading,
     uploading,
-    authRequired,
     upload,
     remove,
     tpInputRef,
